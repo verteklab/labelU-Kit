@@ -18,6 +18,16 @@ export default defineConfig({
       formats: ['es', 'umd'],
       fileName: 'index',
     },
+    rollupOptions: {
+      // 外部依赖配置
+      external: ['react', 'react-dom'],
+      output: {
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+        },
+      },
+    },
   },
   resolve: {
     alias: {

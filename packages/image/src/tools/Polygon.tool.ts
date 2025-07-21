@@ -491,10 +491,11 @@ export class PolygonTool extends Tool<PolygonData, PolygonStyle, PolygonToolOpti
 
     // 激活状态才能吸附
     if (activeLabel && config.lineType === 'line' && config.edgeAdsorptive) {
-      const nearestPoint = rbush.scanPolygonsAndSetNearestPoint(
+      const nearestPoint = rbush.scanPolygonsAndSetStartPoint(
         { x: e.offsetX, y: e.offsetY },
         10,
-        sketch ? [sketch.id] : [],
+        // sketch ? [sketch.id] : [],
+        [],
       );
 
       if (nearestPoint) {
