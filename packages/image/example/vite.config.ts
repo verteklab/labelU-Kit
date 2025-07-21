@@ -6,9 +6,13 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   optimizeDeps: {
-    include: ['react/jsx-runtime'],
+    include: ['react/jsx-runtime', '@labelu/image'],
   },
-
+  server: {
+    fs: {
+      allow: ['..'], // Allow access to the parent directory
+    },
+  },
   plugins: [react()],
   build: {
     target: 'es2015',

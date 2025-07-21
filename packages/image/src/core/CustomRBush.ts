@@ -9,7 +9,7 @@ import { Line, Point, ShapeText } from '../shapes';
 import type { Group } from '../shapes/Group';
 import { axis, eventEmitter } from '../singletons';
 import { EInternalEvent } from '../enums';
-import { getDistanceToLine, getLatestPointOnLine, isBBoxIntersect } from '../shapes/math.util';
+import { getDistanceToLine, getDistance, getLatestPointOnLine, isBBoxIntersect } from '../shapes/math.util';
 
 export interface RBushItem extends BBox {
   id: string;
@@ -21,7 +21,7 @@ export interface RBushItem extends BBox {
 
 export class CustomRBush extends RBush<RBushItem> {
   private _nearestPoint: Point | null = null;
-
+  private _startPoint: Point | null = null;
   private _mapping: Map<string, RBushItem> = new Map();
 
   constructor() {
@@ -114,6 +114,70 @@ export class CustomRBush extends RBush<RBushItem> {
     });
   }
 
+  /**
+   * 扫描多边形并设置起始的点（吸附）
+   * 参考 scanPolygonsAndSetNearestPoint 的实现，吸附到多边形起点
+   * @param dynamicCoordinate 动态坐标
+   * @param threshold 阈值
+   * @param excludeGroupIds 排除的组id
+   * @returns 起始点
+   */
+  public scanPolygonsAndSetStartPoint(
+    dynamicCoordinate: AxisPoint,
+    threshold: number,
+    excludeGroupIds: string[] | undefined = [],
+  ) {
+    if (threshold === 0) {
+      console.warn('threshold is 0');
+    }
+
+    if (!threshold) {
+      return;
+    }
+
+    let nearestStartPoint: AxisPoint | null = null;
+    const rbushItems = this.scanCanvasObject(dynamicCoordinate, threshold);
+
+    const groups =
+      rbushItems
+        ?.filter((item) => item._group && !excludeGroupIds.includes(item._group.id))
+        .map((item) => item._group) ?? [];
+
+    for (const group of groups) {
+      if (!group) continue;
+
+      const points = group.shapes[0].dynamicCoordinate;
+      if (!points || points.length === 0) continue;
+
+      const startPoint = points[0];
+      const distance = getDistance(dynamicCoordinate, startPoint);
+
+      if (distance < threshold) {
+        nearestStartPoint = startPoint;
+        break;
+      }
+    }
+
+    if (nearestStartPoint) {
+      const originalCoord = axis!.getOriginalCoord(nearestStartPoint);
+
+      if (this._startPoint) {
+        this._startPoint.coordinate[0].x = originalCoord.x;
+        this._startPoint.coordinate[0].y = originalCoord.y;
+      } else {
+        this._startPoint = new Point({
+          id: uid(),
+          style: { fill: '#fff', radius: 3, strokeWidth: 0, stroke: '#000' },
+          coordinate: originalCoord,
+        });
+      }
+    } else {
+      this._startPoint?.destroy();
+      this._startPoint = null;
+    }
+
+    return this._startPoint?.coordinate[0];
+  }
   /**
    * 扫描多边形并设置最近的点
    *

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useState } from 'react';
-import { Annotator } from '@labelu/image';
+import { Annotator } from '../../dist/index.mjs';
 
 export const useEngine = (containerRef: React.RefObject<HTMLDivElement>, options?: any) => {
   const [engine, setAnnotationEngine] = useState<any | null>(null);
@@ -104,6 +104,7 @@ export default function App() {
     },
     polygon: {
       lineType: 'line',
+      edgeAdsorption: true,
       outOfCanvas: false,
       labels: [
         {
