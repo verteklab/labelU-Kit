@@ -40,6 +40,8 @@ export class ControllerEdge extends Line {
 
   private _onMouseUpHandlers: EdgeHandler[] = [];
 
+  private _onRightClickHandlers: EdgeHandler[] = [];
+
   private _originalStyle: LineParams['style'] = {};
 
   private _disabled: boolean = false;
@@ -58,6 +60,7 @@ export class ControllerEdge extends Line {
     eventEmitter.on(EInternalEvent.LeftMouseDown, this._handleMouseDown);
     eventEmitter.on(EInternalEvent.MouseMove, this._handleMouseMove);
     eventEmitter.on(EInternalEvent.LeftMouseUp, this._handleMouseUp);
+    eventEmitter.on(EInternalEvent.RightMouseUpWithoutAxisChange, this._handleRightClick);
     this.on(EInternalEvent.ShapeOver, this._onShapeOver);
     this.on(EInternalEvent.ShapeOut, this._onShapeOut);
   }
@@ -137,6 +140,18 @@ export class ControllerEdge extends Line {
     eventEmitter.emit('change');
   };
 
+  private _handleRightClick = (e: MouseEvent) => {
+    if (this._disabled) {
+      return;
+    }
+
+    if (this.isMouseOver) {
+      for (const handler of this._onRightClickHandlers) {
+        handler(e, this);
+      }
+    }
+  };
+
   public set disabled(disabled: boolean) {
     this._disabled = disabled;
   }
@@ -157,11 +172,17 @@ export class ControllerEdge extends Line {
     this._onMouseUpHandlers.push(handler);
   }
 
+  public onRightClick(handler: EdgeHandler) {
+    this._onRightClickHandlers.push(handler);
+  }
+
   public destroy() {
     super.destroy();
     this._onMoveHandlers = [];
+    this._onRightClickHandlers = [];
     eventEmitter.off(EInternalEvent.LeftMouseDown, this._handleMouseDown);
     eventEmitter.off(EInternalEvent.MouseMove, this._handleMouseMove);
     eventEmitter.off(EInternalEvent.LeftMouseUp, this._handleMouseUp);
+    eventEmitter.off(EInternalEvent.RightMouseUpWithoutAxisChange, this._handleRightClick);
   }
 }
