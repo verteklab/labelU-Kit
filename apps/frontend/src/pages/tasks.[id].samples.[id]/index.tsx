@@ -152,6 +152,7 @@ const AnnotationPage = () => {
   const PAGE_SIZE = 40;
   // 滚动加载
   const [totalCount, setTotalCount] = useState<number>(0);
+  const [serverPage, setServerPage] = useState<number>(1);
   const currentPage = useRef<number>(1);
   if (currentPage.current === 1) {
     currentPage.current = sample?.data.inner_id ? Math.floor(sample.data.inner_id / PAGE_SIZE) + 1 : 1;
@@ -170,7 +171,7 @@ const AnnotationPage = () => {
 
     currentPage.current += 1;
     setTotalCount(meta_data?.total ?? 0);
-
+    setServerPage(meta_data?.page ?? 1);
     return data;
   }, [routeParams.taskId]);
   const [samples = [] as SampleResponse[], loading, setSamples, svc] = useScrollFetch(
@@ -180,14 +181,19 @@ const AnnotationPage = () => {
       document.querySelector('.labelu-audio__sidebar div') ||
       document.querySelector('.labelu-video__sidebar div'),
     {
-      isEnd: () => totalCount === samples.length,
+      isEnd: () => totalCount === samples.length || serverPage === Math.ceil(totalCount / PAGE_SIZE),
     },
   );
 
   const leftSiderContent = useMemo(() => <SlideLoader />, []);
 
   const topActionContent = (
-    <AnnotationRightCorner totalSize={totalCount} fetchNext={svc} noSave={!!searchParams.get('noSave')} />
+    <AnnotationRightCorner
+      totalSize={totalCount}
+      fetchNext={svc}
+      isLastPage={serverPage >= Math.ceil(totalCount / PAGE_SIZE)}
+      noSave={!!searchParams.get('noSave')}
+    />
   );
 
   const annotationContextValue = useMemo(() => {

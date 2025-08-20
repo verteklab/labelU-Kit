@@ -29,6 +29,8 @@ interface AnnotationRightCornerProps {
   fetchNext?: () => void;
 
   totalSize: number;
+
+  isLastPage: boolean;
 }
 
 export const SAMPLE_CHANGED = 'sampleChanged';
@@ -63,7 +65,7 @@ export interface AnnotationLoaderData {
   samples: SampleListResponse;
 }
 
-const AnnotationRightCorner = ({ noSave, fetchNext, totalSize }: AnnotationRightCornerProps) => {
+const AnnotationRightCorner = ({ noSave, fetchNext, totalSize, isLastPage }: AnnotationRightCornerProps) => {
   const isFetching = useIsFetching();
   const isMutating = useIsMutating();
   const isGlobalLoading = isFetching > 0 || isMutating > 0;
@@ -86,11 +88,11 @@ const AnnotationRightCorner = ({ noSave, fetchNext, totalSize }: AnnotationRight
 
   // 第一次进入就是40的倍数时，获取下一页数据
   useEffect(() => {
-    if (isLastSample && samples.length < totalSize) {
+    if (isLastSample && samples.length < totalSize && !isLastPage) {
       // TODO: fetchNext 调用两次
       fetchNext?.();
     }
-  }, [fetchNext, isLastSample, samples.length, totalSize]);
+  }, [fetchNext, isLastSample, samples.length, totalSize, isLastPage]);
 
   const navigateWithSearch = useCallback(
     (to: string) => {
