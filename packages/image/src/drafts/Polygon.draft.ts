@@ -108,6 +108,7 @@ export class DraftPolygon extends Draft<PolygonData, PolygonStyle | PointStyle |
       edge.onMouseDown(this._onEdgeDown);
       edge.onMove(this._onEdgeMove);
       edge.onMouseUp(this._onEdgeUp);
+      edge.onRightClick(this._onLineRightClick);
 
       edge.on(EInternalEvent.ShapeOver, this._onLineOver);
 
@@ -260,6 +261,60 @@ export class DraftPolygon extends Draft<PolygonData, PolygonStyle | PointStyle |
 
       group.add(point);
     }
+  };
+
+  /**
+   * 处理线段上的右键点击事件，用于添加新的控制点
+   */
+  private _onLineRightClick = (_e: MouseEvent, line: Line) => {
+    const { config, group, data } = this;
+
+    // 检查是否可以编辑和是否超过最大点数限制
+    if (!this.requestEdit('update')) {
+      return;
+    }
+
+    if (group.shapes[0].coordinate.length + 1 > config.maxPointAmount!) {
+      Tool.error({
+        type: 'maxPointAmount',
+        message: `At most ${config.maxPointAmount} points are allowed`,
+        value: config.maxPointAmount,
+      });
+      return;
+    }
+
+    // 计算鼠标在线段上的最近点
+    const latestPointOnLine = getLatestPointOnLine(
+      {
+        x: _e.offsetX,
+        y: _e.offsetY,
+      },
+      line.dynamicCoordinate[0],
+      line.dynamicCoordinate[1],
+    );
+
+    // 获取线段在组中的索引，用于确定插入位置
+    const lineIndex = group.shapes.indexOf(line);
+    // 线段索引减去多边形本身(第一个shape)，得到在points数组中的插入位置
+    // 由于多边形是第一个shape，所以线段从索引1开始，对应points数组的插入位置
+    const insertIndex = lineIndex;
+
+    // 创建新的点数据
+    const newPoint = {
+      id: uid(),
+      ...axis!.getOriginalCoord(latestPointOnLine),
+    };
+
+    // 插入新点到数据中
+    data.points.splice(insertIndex, 0, newPoint);
+
+    // 重新构建图形
+    group.clear();
+    this._setupShapes();
+    axis?.rerender();
+
+    // 触发变更事件
+    eventEmitter.emit('change');
   };
 
   private _removeTempPoint() {
