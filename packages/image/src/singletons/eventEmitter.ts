@@ -27,7 +27,8 @@ export type EventName =
   | 'contextmenu'
   | 'relationModeStart'
   | 'relationModeEnd'
-  | 'relationCreated';
+  | 'relationCreated'
+  | 'annotationModeChange';
 
 const eventEmitter = new EventEmitter();
 
