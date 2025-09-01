@@ -4,3 +4,4 @@ export * from './Rect.tool';
 export * from './Line.tool';
 export * from './Point.tool';
 export * from './Relation.tool';
+export * from './Drag.tool';

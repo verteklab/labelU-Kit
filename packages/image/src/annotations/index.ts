@@ -20,4 +20,5 @@ export const AnnotationMapping = {
   line: AnnotationLine,
   point: AnnotationPoint,
   relation: AnnotationRelation,
+  drag: AnnotationRect, // 拖动工具使用矩形标注作为基础
 };

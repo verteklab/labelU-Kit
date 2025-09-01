@@ -6,6 +6,7 @@ import type {
   PolygonToolOptions,
   RectToolOptions,
   RelationToolOptions,
+  DragToolOptions,
 } from '@/tools';
 
 export interface AnnotatorOptions {
@@ -26,6 +27,8 @@ export interface AnnotatorOptions {
   cuboid?: CuboidToolOptions;
 
   relation?: RelationToolOptions;
+
+  drag?: DragToolOptions;
 
   /**
    * 全局的是否可编辑设置，权重高于requestEdit函数
@@ -102,6 +105,8 @@ export default class AnnotatorConfig {
 
   public relation?: RelationToolOptions;
 
+  public drag?: DragToolOptions;
+
   public editable?: boolean = true;
 
   /** 是否处于标注模式 */
@@ -138,6 +143,7 @@ export default class AnnotatorConfig {
     this.rect = options.rect;
     this.polygon = options.polygon;
     this.cuboid = options.cuboid;
+    this.drag = options.drag; // 添加拖动工具配置
     this.editable = options.editable ?? true;
     this.isAnnotationMode = options.isAnnotationMode ?? false;
     this.image = options.image;

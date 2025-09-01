@@ -24,6 +24,8 @@ import type {
   RectToolOptions,
   RelationTool,
   RelationToolOptions,
+  DragTool,
+  DragToolOptions,
 } from './tools';
 
 export type EditType = 'create' | 'update' | 'delete';
@@ -77,7 +79,8 @@ export type ToolOptions =
   | RectToolOptions
   | PolygonToolOptions
   | CuboidToolOptions
-  | RelationToolOptions;
+  | RelationToolOptions
+  | DragToolOptions;
 
 export type { LineData };
 
@@ -90,11 +93,11 @@ export type AllTypeAnnotationDataGroup = CuboidData[] &
   LineData[] &
   RelationData[];
 
-export type AnnotationTool = LineTool | PointTool | RectTool | PolygonTool | CuboidTool | RelationTool;
+export type AnnotationTool = LineTool | PointTool | RectTool | PolygonTool | CuboidTool | RelationTool | DragTool;
 
 export type AnnotationShape = Line | Point | Rect | Polygon | Spline | ClosedSpline;
 
-export type ToolName = 'line' | 'point' | 'polygon' | 'rect' | 'cuboid' | 'relation';
+export type ToolName = 'line' | 'point' | 'polygon' | 'rect' | 'cuboid' | 'relation' | 'drag';
 
 export type AnnotationToolData<T extends ToolName> = T extends 'line'
   ? LineData[]

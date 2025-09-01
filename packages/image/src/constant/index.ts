@@ -1,4 +1,4 @@
-export const TOOL_NAMES = ['point', 'line', 'rect', 'polygon', 'cuboid', 'relation'] as const;
+export const TOOL_NAMES = ['point', 'line', 'rect', 'polygon', 'cuboid', 'relation', 'drag'] as const;
 
 export const DEFAULT_LABEL_TEXT = 'noneLabel';
 

@@ -18,6 +18,7 @@ import { createConfig } from './singletons/annotationConfig';
 import type { AnnotatorOptions } from './core/AnnotatorConfig';
 // import { relationManager } from './singletons/relationManager';
 import { RelationTool } from './tools/Relation.tool';
+import { DragTool } from './tools/Drag.tool';
 
 const ToolMapping = {
   line: LineTool,
@@ -26,6 +27,7 @@ const ToolMapping = {
   polygon: PolygonTool,
   cuboid: CuboidTool,
   relation: RelationTool,
+  drag: DragTool,
 } as const;
 
 export class AnnotatorBase {
@@ -131,8 +133,11 @@ export class AnnotatorBase {
     }
 
     TOOL_NAMES.forEach((toolName) => {
+      console.log(`🔧 检查工具配置: ${toolName}`, config[toolName]);
       if (config[toolName]) {
+        console.log(`✅ 创建工具: ${toolName}`);
         const ToolClass = ToolMapping[toolName];
+        console.log(`🔧 工具类:`, ToolClass);
         this.use(
           ToolClass.create({
             ...(config[toolName] as any),
@@ -141,6 +146,8 @@ export class AnnotatorBase {
             getTools: () => this.tools,
           }),
         );
+      } else {
+        console.log(`❌ 跳过工具: ${toolName} (配置不存在)`);
       }
     });
   }

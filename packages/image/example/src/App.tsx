@@ -1,23 +1,16 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { useState } from 'react';
 import { Annotator } from '../../dist/index.mjs';
 
 export const useEngine = (containerRef: React.RefObject<HTMLDivElement>, options?: any) => {
   const [engine, setAnnotationEngine] = useState<any | null>(null);
-  const [optionsState, setOptionsState] = useState<any | null>(options);
-
-  useEffect(() => {
-    if (JSON.stringify(options) === JSON.stringify(optionsState)) {
-      return;
-    }
-
-    setOptionsState(options);
-  }, [options]);
 
   useEffect(() => {
     if (!containerRef.current) {
       return;
     }
+
+    console.log('🔧 useEngine - 创建 Annotator，配置:', options);
 
     const ae = new Annotator({
       container: containerRef.current,
@@ -30,138 +23,156 @@ export const useEngine = (containerRef: React.RefObject<HTMLDivElement>, options
       setAnnotationEngine(null);
       ae.destroy();
     };
-  }, [optionsState, containerRef]);
+  }, [containerRef, options]); // 当 containerRef 或 options 改变时重新创建
 
   return engine;
 };
 
-const tools = [{ name: 'point' }, { name: 'line' }, { name: 'rect' }, { name: 'polygon' }, { name: 'cuboid' }];
+const tools = [
+  { name: 'point' },
+  { name: 'line' },
+  { name: 'rect' },
+  { name: 'polygon' },
+  { name: 'cuboid' },
+  { name: 'drag' },
+];
 
 export default function App() {
   const ref = useRef<HTMLDivElement>(null);
-  const engine = useEngine(ref, {
-    width: 800,
-    height: 600,
-    showOrder: true,
-    cursor: {
-      style: {
-        stroke: '#91ff00',
+
+  // 使用 useMemo 稳定化配置对象，避免每次渲染都创建新引用
+  const engineConfig = useMemo(
+    () => ({
+      width: 800,
+      height: 600,
+      showOrder: true,
+      cursor: {
+        style: {
+          stroke: '#91ff00',
+        },
       },
-    },
-    line: {
-      lineType: 'line',
-      outOfImage: false,
-      labels: [
-        {
-          id: '1',
-          value: 'noneAttribute',
-          key: '撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本',
-          color: '#ff0000',
-        },
-        {
-          id: 'car',
-          value: 'car',
-          key: '车子',
-          color: '#f69',
-        },
-      ],
-    },
-    point: {
-      outOfCanvas: false,
-      labels: [
-        {
-          id: '1',
-          value: 'noneAttribute',
-          key: '无标签',
-          color: '#ff0000',
-        },
-        {
-          id: 'car',
-          value: 'car',
-          key: '车子',
-          color: '#f69',
-        },
-      ],
-    },
-    rect: {
-      outOfImage: false,
-      minWidth: 100,
-      minHeight: 50,
-      labels: [
-        {
-          id: '1',
-          value: 'noneAttribute',
-          key: '无标签',
-          color: '#e1ff00',
-        },
-        {
-          id: 'car',
-          value: 'car',
-          key: '车子',
-          color: '#6b66ff',
-        },
-      ],
-    },
-    polygon: {
-      lineType: 'line',
-      edgeAdsorption: true,
-      outOfCanvas: false,
-      labels: [
-        {
-          id: '1',
-          value: 'noneAttribute',
-          key: '撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本',
-          color: '#ff00d4',
-        },
-        {
-          id: 'car',
-          value: 'car',
-          key: '车子',
-          color: '#0920ef',
-        },
-      ],
-    },
-    cuboid: {
-      labels: [
-        {
-          id: '1',
-          value: 'human',
-          key: '人类',
-          color: '#9500ff',
-        },
-        {
-          id: 'car',
-          value: 'car',
-          key: '车子',
-          color: '#09ef18',
-          attributes: [
-            {
-              key: '行走姿势',
-              value: 'pose',
-              type: 'string',
-              maxLength: 1000,
-              required: true,
-              stringType: 'text' as const,
-              defaultValue: '',
-              regexp: '',
-            },
-            {
-              key: '人种',
-              value: 'race',
-              type: 'enum',
-              required: true,
-              options: [
-                {
-                  key: '黑人',
-                  value: 'black',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  });
+      line: {
+        lineType: 'line',
+        outOfImage: false,
+        labels: [
+          {
+            id: '1',
+            value: 'noneAttribute',
+            key: '撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本',
+            color: '#ff0000',
+          },
+          {
+            id: 'car',
+            value: 'car',
+            key: '车子',
+            color: '#f69',
+          },
+        ],
+      },
+      point: {
+        outOfCanvas: false,
+        labels: [
+          {
+            id: '1',
+            value: 'noneAttribute',
+            key: '无标签',
+            color: '#ff0000',
+          },
+          {
+            id: 'car',
+            value: 'car',
+            key: '车子',
+            color: '#f69',
+          },
+        ],
+      },
+      rect: {
+        outOfImage: false,
+        minWidth: 100,
+        minHeight: 50,
+        labels: [
+          {
+            id: '1',
+            value: 'noneAttribute',
+            key: '无标签',
+            color: '#e1ff00',
+          },
+          {
+            id: 'car',
+            value: 'car',
+            key: '车子',
+            color: '#6b66ff',
+          },
+        ],
+      },
+      polygon: {
+        lineType: 'line',
+        edgeAdsorption: true,
+        outOfCanvas: false,
+        labels: [
+          {
+            id: '1',
+            value: 'noneAttribute',
+            key: '撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本撒丢我二请问这是一大段文本',
+            color: '#ff00d4',
+          },
+          {
+            id: 'car',
+            value: 'car',
+            key: '车子',
+            color: '#0920ef',
+          },
+        ],
+      },
+      cuboid: {
+        labels: [
+          {
+            id: '1',
+            value: 'human',
+            key: '人类',
+            color: '#9500ff',
+          },
+          {
+            id: 'car',
+            value: 'car',
+            key: '车子',
+            color: '#09ef18',
+            attributes: [
+              {
+                key: '行走姿势',
+                value: 'pose',
+                type: 'string',
+                maxLength: 1000,
+                required: true,
+                stringType: 'text' as const,
+                defaultValue: '',
+                regexp: '',
+              },
+              {
+                key: '人种',
+                value: 'race',
+                type: 'enum',
+                required: true,
+                options: [
+                  {
+                    key: '黑人',
+                    value: 'black',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      drag: {
+        enabled: true,
+        labels: [],
+      },
+    }),
+    [],
+  ); // 空依赖数组，配置对象永远不会改变
+
+  const engine = useEngine(ref, engineConfig);
 
   const [tool, setTool] = useState('point');
   const [label, setLabel] = useState('car');
@@ -386,20 +397,57 @@ export default function App() {
       setTool(toolName);
       setLabel(label);
     });
+
+    // 添加拖动事件监听器
+    engine.on('move', (data) => {
+      console.log('拖动事件:', data);
+    });
+
+    engine.on('change', (data) => {
+      console.log('标注变更:', data);
+    });
   }, [engine]);
 
   const switchTool = (tool: string) => () => {
-    engine.switch(tool, 'car');
-    setTool(tool);
-    setLabel('car');
+    if (tool === 'drag') {
+      // 拖动工具不需要标签
+      engine.switch(tool);
+      setTool(tool);
+      setLabel('拖动模式');
+    } else {
+      engine.switch(tool, 'car');
+      setTool(tool);
+      setLabel('car');
+    }
   };
 
   return (
     <div>
+      <div
+        style={{
+          position: 'fixed',
+          top: '10px',
+          left: '10px',
+          right: '10px',
+          backgroundColor: '#e3f2fd',
+          padding: '10px',
+          borderRadius: '5px',
+          fontSize: '12px',
+          zIndex: 1000,
+        }}
+      >
+        <strong>使用说明：</strong>
+        1. 先使用绘制工具创建标注框 2. 切换到"🖱️ 拖动"工具 3. 点击并拖动现有标注框来调整位置 4. 使用"📊
+        导出标注数据"查看更新后的数据
+      </div>
       <div style={{ margin: '10rem 0 0 10rem' }} ref={ref} />
-      <div>
+      <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
+        <div style={{ marginBottom: '10px', fontSize: '14px', color: '#666' }}>
+          当前工具: <strong>{tool}</strong> | 当前标签: <strong>{label}</strong>
+        </div>
         {tools.map((item) => (
           <button
+            key={item.name}
             style={{
               backgroundColor: tool === item.name ? '#f60' : '#fff',
               color: tool === item.name ? '#fff' : '#333',
@@ -411,9 +459,31 @@ export default function App() {
             }}
             onClick={switchTool(item.name)}
           >
-            {item.name}
+            {item.name === 'drag' ? '🖱️ 拖动' : item.name}
           </button>
         ))}
+        <div style={{ marginTop: '10px' }}>
+          <button
+            style={{
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+            onClick={() => {
+              if (engine) {
+                const data = engine.export();
+                console.log('导出标注数据:', data);
+                alert('数据已导出到控制台，请按F12查看');
+              }
+            }}
+          >
+            📊 导出标注数据
+          </button>
+        </div>
       </div>
     </div>
   );
