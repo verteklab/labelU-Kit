@@ -30,7 +30,11 @@ export interface PolygonToolOptions extends BasicToolParams<PolygonData, Polygon
    * @default true;
    */
   edgeAdsorptive?: boolean;
-
+  /**
+   * 吸附距离
+   * @default true;
+   */
+  adsorptiveDistance?: number;
   /**
    * 图片外标注
    * @default true;
@@ -95,6 +99,7 @@ export class PolygonTool extends Tool<PolygonData, PolygonStyle, PolygonToolOpti
       lineType: 'line',
       edgeAdsorptive: true,
       outOfImage: true,
+      adsorptiveDistance: 10,
       minPointAmount: 3,
       labels: [],
       // ----------------
@@ -491,11 +496,18 @@ export class PolygonTool extends Tool<PolygonData, PolygonStyle, PolygonToolOpti
 
     // 激活状态才能吸附
     if (activeLabel && config.lineType === 'line' && config.edgeAdsorptive) {
-      const nearestPoint = rbush.scanPolygonsAndSetStartPoint(
+      // 吸附起点功能
+      // const nearestPoint = rbush.scanPolygonsAndSetStartPoint(
+      //   { x: e.offsetX, y: e.offsetY },
+      //   10,
+      //   // sketch ? [sketch.id] : [],
+      //   [],
+      // );
+      // 吸附边缘功能
+      const nearestPoint = rbush.scanPolygonsAndSetNearestPoint(
         { x: e.offsetX, y: e.offsetY },
-        10,
-        // sketch ? [sketch.id] : [],
-        [],
+        config.adsorptiveDistance ?? 10, // 吸附距离
+        sketch ? [sketch.id] : [],
       );
 
       if (nearestPoint) {
