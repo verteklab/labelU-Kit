@@ -26,9 +26,9 @@ export type EventName =
   | 'rightClick'
   | 'contextmenu'
   | 'relationModeStart'
-  | 'relationModeEnd'
-  | 'relationCreated'
-  | 'annotationModeChange';
+  | 'relationModeEnd';
+// | 'relationCreated'
+// | 'annotationModeChange';
 
 const eventEmitter = new EventEmitter();
 

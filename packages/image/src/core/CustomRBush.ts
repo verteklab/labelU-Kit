@@ -250,6 +250,76 @@ export class CustomRBush extends RBush<RBushItem> {
   }
 
   /**
+   * 扫描多边形并设置最近的顶点
+   *
+   * @param dynamicCoordinate 动态坐标
+   * @param threshold 阈值
+   * @param excludeGroupIds 排除的组id
+   * @returns 最近的顶点
+   */
+  public scanPolygonsAndSetNearestVertex(
+    dynamicCoordinate: AxisPoint,
+    threshold: number,
+    excludeGroupIds: string[] | undefined = [],
+  ) {
+    if (threshold === 0) {
+      console.warn('threshold is 0');
+    }
+
+    if (!threshold) {
+      return;
+    }
+
+    const { _nearestPoint } = this;
+
+    let nearestVertex;
+    const rbushItems = this.scanCanvasObject(dynamicCoordinate, threshold);
+    const groups =
+      rbushItems
+        ?.filter((item) => item._group && !excludeGroupIds.includes(item._group.id))
+        .map((item) => item._group) ?? [];
+
+    // 找到距离最近的顶点
+    for (const group of groups) {
+      if (!group) {
+        continue;
+      }
+
+      const points = group.shapes[0].dynamicCoordinate;
+
+      for (let i = 0; i < points.length; i++) {
+        const distance = getDistance(dynamicCoordinate, points[i]);
+
+        if (distance < threshold) {
+          nearestVertex = points[i];
+          break;
+        }
+      }
+    }
+
+    // 创建预设点
+    if (nearestVertex) {
+      const latestPointUnscaled = axis!.getOriginalCoord(nearestVertex);
+
+      if (_nearestPoint) {
+        _nearestPoint.coordinate[0].x = latestPointUnscaled.x;
+        _nearestPoint.coordinate[0].y = latestPointUnscaled.y;
+      } else {
+        this._nearestPoint = new Point({
+          id: uid(),
+          style: { fill: '#fff', radius: 3, strokeWidth: 0, stroke: '#000' },
+          coordinate: latestPointUnscaled,
+        });
+      }
+    } else {
+      this._nearestPoint?.destroy();
+      this._nearestPoint = null;
+    }
+
+    return this._nearestPoint?.coordinate[0];
+  }
+
+  /**
    * 扫描线段并设置最近的点
    *
    * @param dynamicCoordinate 动态坐标

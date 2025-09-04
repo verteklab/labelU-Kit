@@ -4,7 +4,7 @@ import { ControllerPoint } from '@/drafts/ControllerPoint';
 import { ControllerEdge } from '@/drafts/ControllerEdge';
 
 import { axis, eventEmitter, monitor } from '../singletons';
-import { config } from '../singletons/annotationConfig';
+// import { config } from '../singletons/annotationConfig';
 import { EInternalEvent } from '../enums';
 import type { BasicImageAnnotation } from '../interface';
 import type { BasicToolParams } from './Tool';
@@ -46,9 +46,9 @@ export function ToolWrapper<
 
     private _handleLeftMouseDown = (e: MouseEvent) => {
       // 检查是否处于标注模式
-      if (!config?.isAnnotationMode) {
-        return;
-      }
+      // if (!config?.isAnnotationMode) {
+      //   return;
+      // }
 
       if (!this.activeLabel || monitor?.keyboard.Space || !this.requestEdit('create')) {
         return;

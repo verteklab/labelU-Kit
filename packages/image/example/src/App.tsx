@@ -105,6 +105,7 @@ export default function App() {
     polygon: {
       lineType: 'line',
       edgeAdsorption: true,
+      vertexAdsorptive: false,
       outOfCanvas: false,
       labels: [
         {
