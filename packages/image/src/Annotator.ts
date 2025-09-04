@@ -14,91 +14,92 @@ import type { CursorType } from './core/CursorManager';
 export type { AnnotatorOptions };
 
 export class Annotator extends AnnotatorBase {
-  /** 是否处于标注模式 */
-  private _isAnnotationMode: boolean = false;
+  // /** 是否处于标注模式 */
+  // private _isAnnotationMode: boolean = false;
 
-  /** 用户上次选择的工具名，用于退出标注模式后重新进入时恢复工具状态 */
-  private _lastSelectedToolName: ToolName | null = null;
+  // /** 用户上次选择的工具名，用于退出标注模式后重新进入时恢复工具状态 */
+  // private _lastSelectedToolName: ToolName | null = null;
 
   constructor(params: AnnotatorOptions) {
     super(params);
 
     // 监听内部工具切换事件（由工具本身发出）
     eventEmitter.on(EInternalEvent.ToolChange, this._handleToolChange);
-    // 监听外部工具切换事件（由UI组件发出）
-    eventEmitter.on('toolChange', this._handleExternalToolChange);
-    eventEmitter.on(EInternalEvent.LeftMouseUp, this._handleLeftClick);
-    eventEmitter.on(EInternalEvent.Escape, this._handleEscapeKey);
+    // // 监听外部工具切换事件（由UI组件发出）
+    // eventEmitter.on('toolChange', this._handleExternalToolChange);
+    // eventEmitter.on(EInternalEvent.LeftMouseUp, this._handleLeftClick);
+    // eventEmitter.on(EInternalEvent.Escape, this._handleEscapeKey);
   }
 
   private _handleToolChange = (toolName: ToolName, label: string) => {
-    // 保存用户选择的工具名，无论是否在标注模式下
-    this._lastSelectedToolName = toolName;
+    this.switch(toolName, label);
+    // // 保存用户选择的工具名，无论是否在标注模式下
+    // this._lastSelectedToolName = toolName;
 
-    // 如果当前在标注模式下，立即切换工具
-    if (this._isAnnotationMode) {
-      this.switch(toolName, label);
-    }
+    // // 如果当前在标注模式下，立即切换工具
+    // if (this._isAnnotationMode) {
+    //   this.switch(toolName, label);
+    // }
   };
 
   /**
    * 处理外部UI发送的工具切换事件
    */
-  private _handleExternalToolChange = (toolName: ToolName, label?: string) => {
-    // 保存用户选择的工具名，无论是否在标注模式下
-    this._lastSelectedToolName = toolName;
+  // private _handleExternalToolChange = (toolName: ToolName, label?: string) => {
+  //   // 保存用户选择的工具名，无论是否在标注模式下
+  //   this._lastSelectedToolName = toolName;
 
-    // 如果当前在标注模式下，立即切换工具
-    if (this._isAnnotationMode) {
-      this.switch(toolName, label);
-    }
-  };
+  //   // 如果当前在标注模式下，立即切换工具
+  //   if (this._isAnnotationMode) {
+  //     this.switch(toolName, label);
+  //   }
+  // };
 
   /**
    * 处理ESC键事件，退出标注模式
    */
-  private _handleEscapeKey = () => {
-    if (this._isAnnotationMode) {
-      this.exitAnnotationMode();
-    }
-  };
+  // private _handleEscapeKey = () => {
+  //   if (this._isAnnotationMode) {
+  //     this.exitAnnotationMode();
+  //   }
+  // };
 
   /**
    * 处理左键释放事件，在浏览模式下进入标注模式
    */
-  private _handleLeftClick = (e: MouseEvent) => {
-    // 只有在浏览模式下才处理进入标注模式
-    if (!this._isAnnotationMode && this.config?.editable) {
-      // 检查是否有拖动行为，只有纯粒的点击（没有拖动）才进入标注模式
-      if (axis && axis.isMoved) {
-        return;
-      }
+  // private _handleLeftClick = (e: MouseEvent) => {
+  //   // 只有在浏览模式下才处理进入标注模式
+  //   if (!this._isAnnotationMode && this.config?.editable) {
+  //     // 检查是否有拖动行为，只有纯粒的点击（没有拖动）才进入标注模式
+  //     if (axis && axis.isMoved) {
+  //       return;
+  //     }
 
-      // 检查是否点击在现有标注上，如果是，则不进入标注模式
-      if (!this._isClickingOnExistingAnnotation(e)) {
-        this.enterAnnotationMode();
-      }
-    }
-  };
+  //     // 检查是否点击在现有标注上，如果是，则不进入标注模式
+  //     if (!this._isClickingOnExistingAnnotation(e)) {
+  //       this.enterAnnotationMode();
+  //     }
+  //   }
+  // };
 
   /**
    * 检查是否点击在现有的标注上
    */
-  private _isClickingOnExistingAnnotation(e: MouseEvent): boolean {
-    const point = { x: e.offsetX, y: e.offsetY };
+  // private _isClickingOnExistingAnnotation(e: MouseEvent): boolean {
+  //   const point = { x: e.offsetX, y: e.offsetY };
 
-    for (const tool of this.tools.values()) {
-      if (tool.drawing) {
-        for (const annotation of tool.drawing.values()) {
-          if (annotation.group.isShapesUnderCursor(point)) {
-            return true;
-          }
-        }
-      }
-    }
+  //   for (const tool of this.tools.values()) {
+  //     if (tool.drawing) {
+  //       for (const annotation of tool.drawing.values()) {
+  //         if (annotation.group.isShapesUnderCursor(point)) {
+  //           return true;
+  //         }
+  //       }
+  //     }
+  //   }
 
-    return false;
-  }
+  //   return false;
+  // }
 
   public rotate(angle: number) {
     const { backgroundRenderer } = this;
@@ -228,68 +229,68 @@ export class Annotator extends AnnotatorBase {
   /**
    * 进入标注模式
    */
-  public enterAnnotationMode(toolName?: ToolName, label?: string) {
-    if (this._isAnnotationMode) {
-      return;
-    }
+  // public enterAnnotationMode(toolName?: ToolName, label?: string) {
+  //   if (this._isAnnotationMode) {
+  //     return;
+  //   }
 
-    this._isAnnotationMode = true;
+  //   this._isAnnotationMode = true;
 
-    // 更新全局配置
-    if (this.config) {
-      this.config.isAnnotationMode = true;
-    }
+  //   // 更新全局配置
+  //   if (this.config) {
+  //     this.config.isAnnotationMode = true;
+  //   }
 
-    if (this.cursorManager) {
-      this.cursorManager.enterAnnotationMode();
-    }
+  //   if (this.cursorManager) {
+  //     this.cursorManager.enterAnnotationMode();
+  //   }
 
-    // 如果没有指定工具，优先使用用户上次选择的工具
-    const targetToolName = toolName || this._lastSelectedToolName;
+  //   // 如果没有指定工具，优先使用用户上次选择的工具
+  //   const targetToolName = toolName || this._lastSelectedToolName;
 
-    if (targetToolName) {
-      this.switch(targetToolName, label);
-    }
+  //   if (targetToolName) {
+  //     this.switch(targetToolName, label);
+  //   }
 
-    this.emit('annotationModeChange', true);
-  }
+  //   this.emit('annotationModeChange', true);
+  // }
 
   /**
    * 退出标注模式
    */
-  public exitAnnotationMode() {
-    if (!this._isAnnotationMode) {
-      return;
-    }
+  // public exitAnnotationMode() {
+  //   if (!this._isAnnotationMode) {
+  //     return;
+  //   }
 
-    this._isAnnotationMode = false;
+  //   this._isAnnotationMode = false;
 
-    // 更新全局配置
-    if (this.config) {
-      this.config.isAnnotationMode = false;
-    }
+  //   // 更新全局配置
+  //   if (this.config) {
+  //     this.config.isAnnotationMode = false;
+  //   }
 
-    if (this.cursorManager) {
-      this.cursorManager.exitAnnotationMode();
-    }
+  //   if (this.cursorManager) {
+  //     this.cursorManager.exitAnnotationMode();
+  //   }
 
-    // 取消工具激活状态
-    if (this.activeTool) {
-      this.activeTool.deactivate();
-    }
+  //   // 取消工具激活状态
+  //   if (this.activeTool) {
+  //     this.activeTool.deactivate();
+  //   }
 
-    // 清空当前激活的工具名，确保下次进入标注模式时能正确激活工具
-    this.activeToolName = null;
+  //   // 清空当前激活的工具名，确保下次进入标注模式时能正确激活工具
+  //   this.activeToolName = null;
 
-    this.emit('annotationModeChange', false);
-  }
+  //   this.emit('annotationModeChange', false);
+  // }
 
   /**
    * 获取当前是否处于标注模式
    */
-  public get isAnnotationMode() {
-    return this._isAnnotationMode;
-  }
+  // public get isAnnotationMode() {
+  //   return this._isAnnotationMode;
+  // }
 
   /**
    * 使工具进入绘制状态
@@ -310,15 +311,15 @@ export class Annotator extends AnnotatorBase {
       return;
     }
 
-    // 始终记录用户选择的工具，无论是否在标注模式下
-    this._lastSelectedToolName = toolName;
+    // // 始终记录用户选择的工具，无论是否在标注模式下
+    // this._lastSelectedToolName = toolName;
 
-    // 只有在标注模式下才激活工具
-    if (!this._isAnnotationMode) {
-      // 在浏览模式下只记录选择，不激活工具
-      this.emit('toolChange', toolName, label || 'car'); // 触发UI更新
-      return;
-    }
+    // // 只有在标注模式下才激活工具
+    // if (!this._isAnnotationMode) {
+    //   // 在浏览模式下只记录选择，不激活工具
+    //   this.emit('toolChange', toolName, label || 'car'); // 触发UI更新
+    //   return;
+    // }
 
     const { activeToolName } = this;
     const tool = this.tools.get(toolName);

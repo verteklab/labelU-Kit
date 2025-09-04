@@ -36,6 +36,11 @@ export interface PolygonToolOptions extends BasicToolParams<PolygonData, Polygon
    */
   adsorptiveDistance?: number;
   /**
+   * 顶点
+   * @default true;
+   */
+  vertexAdsorptive?: boolean;
+  /**
    * 图片外标注
    * @default true;
    */
@@ -100,6 +105,7 @@ export class PolygonTool extends Tool<PolygonData, PolygonStyle, PolygonToolOpti
       edgeAdsorptive: true,
       outOfImage: true,
       adsorptiveDistance: 10,
+      vertexAdsorptive: true,
       minPointAmount: 3,
       labels: [],
       // ----------------
@@ -503,16 +509,29 @@ export class PolygonTool extends Tool<PolygonData, PolygonStyle, PolygonToolOpti
       //   // sketch ? [sketch.id] : [],
       //   [],
       // );
-      // 吸附边缘功能
-      const nearestPoint = rbush.scanPolygonsAndSetNearestPoint(
-        { x: e.offsetX, y: e.offsetY },
-        config.adsorptiveDistance ?? 10, // 吸附距离
-        sketch ? [sketch.id] : [],
-      );
+      if (config.vertexAdsorptive) {
+        // 吸附顶点功能
+        const nearestVertex = rbush.scanPolygonsAndSetNearestVertex(
+          { x: e.offsetX, y: e.offsetY },
+          config.adsorptiveDistance ?? 10, // 吸附距离
+          sketch ? [sketch.id] : [],
+        );
+        if (nearestVertex) {
+          x = nearestVertex.x;
+          y = nearestVertex.y;
+        }
+      } else {
+        // 吸附线功能
+        const nearestPoint = rbush.scanPolygonsAndSetNearestPoint(
+          { x: e.offsetX, y: e.offsetY },
+          config.adsorptiveDistance ?? 10, // 吸附距离
+          sketch ? [sketch.id] : [],
+        );
 
-      if (nearestPoint) {
-        x = nearestPoint.x;
-        y = nearestPoint.y;
+        if (nearestPoint) {
+          x = nearestPoint.x;
+          y = nearestPoint.y;
+        }
       }
     }
 

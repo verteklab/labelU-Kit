@@ -36,7 +36,7 @@ export interface AnnotatorOptions {
   editable?: boolean;
 
   /** 是否处于标注模式 */
-  isAnnotationMode?: boolean;
+  // isAnnotationMode?: boolean;
 
   image: {
     url: string;
@@ -105,7 +105,7 @@ export default class AnnotatorConfig {
   public editable?: boolean = true;
 
   /** 是否处于标注模式 */
-  public isAnnotationMode?: boolean = false;
+  // public isAnnotationMode?: boolean = false;
 
   public image: {
     url: string;
@@ -139,7 +139,7 @@ export default class AnnotatorConfig {
     this.polygon = options.polygon;
     this.cuboid = options.cuboid;
     this.editable = options.editable ?? true;
-    this.isAnnotationMode = options.isAnnotationMode ?? false;
+    // this.isAnnotationMode = options.isAnnotationMode ?? false;
     this.image = options.image;
     this.showOrder = options.showOrder;
     this.strokeWidth = options.strokeWidth;

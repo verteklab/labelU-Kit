@@ -29,7 +29,7 @@ export class CursorManager {
   public disabled = false;
 
   /** 是否处于标注模式 */
-  private _isAnnotationMode = false;
+  // private _isAnnotationMode = false;
 
   private _container: HTMLDivElement;
 
@@ -73,20 +73,20 @@ export class CursorManager {
    * 激活到绘制鼠标
    */
   public activate() {
-    if (this._isAnnotationMode) {
-      // 标注模式：显示十字光标
-      this._container.style.cursor = 'none';
-      this.currentCursor = 'default';
+    // if (this._isAnnotationMode) {
+    // 标注模式：显示十字光标
+    this._container.style.cursor = 'none';
+    this.currentCursor = 'default';
 
-      this.cursor?.updateCoordinate(this._coordinate.x, this._coordinate.y);
-      this.cursor?.setStyle({
-        stroke: this._color,
-      });
-    } else {
-      // 浏览模式：显示普通光标
-      this._container.style.cursor = 'default';
-      this.currentCursor = 'disabled';
-    }
+    this.cursor?.updateCoordinate(this._coordinate.x, this._coordinate.y);
+    this.cursor?.setStyle({
+      stroke: this._color,
+    });
+    // } else {
+    //   // 浏览模式：显示普通光标
+    //   this._container.style.cursor = 'default';
+    //   this.currentCursor = 'disabled';
+    // }
   }
 
   public enable() {
@@ -97,18 +97,18 @@ export class CursorManager {
   /**
    * 进入标注模式
    */
-  public enterAnnotationMode() {
-    this._isAnnotationMode = true;
-    this.activate();
-  }
+  // public enterAnnotationMode() {
+  //   this._isAnnotationMode = true;
+  //   this.activate();
+  // }
 
   /**
    * 退出标注模式，进入浏览模式
    */
-  public exitAnnotationMode() {
-    this._isAnnotationMode = false;
-    this.activate();
-  }
+  // public exitAnnotationMode() {
+  //   this._isAnnotationMode = false;
+  //   this.activate();
+  // }
 
   public disable() {
     this.disabled = true;
@@ -157,7 +157,8 @@ export class CursorManager {
 
   public render(ctx: CanvasRenderingContext2D | null) {
     // 只有在标注模式下才渲染十字光标
-    if (!this.cursor || this.disabled || !this._isAnnotationMode) {
+    // if (!this.cursor || this.disabled || !this._isAnnotationMode) {
+    if (!this.cursor || this.disabled) {
       return;
     }
 
