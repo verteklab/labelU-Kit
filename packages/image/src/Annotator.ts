@@ -5,8 +5,8 @@ import { EInternalEvent } from './enums';
 import { axis } from './singletons/axis';
 import { eventEmitter, rbush } from './singletons';
 import { Annotation, AnnotationMapping } from './annotations';
-import type { Cursor } from './shapes';
 import { Line, ShapeText } from './shapes';
+import type { Cursor } from './shapes';
 import { AnnotatorBase } from './AnnotatorBase';
 import type { AnnotatorOptions } from './core/AnnotatorConfig';
 import type { CursorType } from './core/CursorManager';
@@ -20,11 +20,14 @@ export class Annotator extends AnnotatorBase {
   // /** 用户上次选择的工具名，用于退出标注模式后重新进入时恢复工具状态 */
   // private _lastSelectedToolName: ToolName | null = null;
 
+  private _pendingSwitch: { toolName: ToolName; label?: string } | null = null;
+
   constructor(params: AnnotatorOptions) {
     super(params);
 
     // 监听内部工具切换事件（由工具本身发出）
     eventEmitter.on(EInternalEvent.ToolChange, this._handleToolChange);
+    eventEmitter.on('toolsReady', this._handleToolsReady);
     // // 监听外部工具切换事件（由UI组件发出）
     // eventEmitter.on('toolChange', this._handleExternalToolChange);
     // eventEmitter.on(EInternalEvent.LeftMouseUp, this._handleLeftClick);
@@ -40,6 +43,17 @@ export class Annotator extends AnnotatorBase {
     // if (this._isAnnotationMode) {
     //   this.switch(toolName, label);
     // }
+  };
+
+  private _handleToolsReady = () => {
+    if (!this._pendingSwitch) {
+      return;
+    }
+
+    const { toolName, label } = this._pendingSwitch;
+
+    this._pendingSwitch = null;
+    this.switch(toolName, label);
   };
 
   /**
@@ -311,6 +325,13 @@ export class Annotator extends AnnotatorBase {
       return;
     }
 
+    if (!this._toolsInitialized) {
+      this._pendingSwitch = { toolName, label };
+      return;
+    }
+
+    this._pendingSwitch = null;
+
     // // 始终记录用户选择的工具，无论是否在标注模式下
     // this._lastSelectedToolName = toolName;
 
@@ -509,6 +530,12 @@ export class Annotator extends AnnotatorBase {
       rotate: backgroundRenderer.rotateDegree,
       data: this.getDataByTool(),
     };
+  }
+
+  public destroy() {
+    eventEmitter.off(EInternalEvent.ToolChange, this._handleToolChange);
+    eventEmitter.off('toolsReady', this._handleToolsReady);
+    super.destroy();
   }
 
   /**

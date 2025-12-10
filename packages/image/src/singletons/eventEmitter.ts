@@ -25,6 +25,7 @@ export type EventName =
   | 'error'
   | 'rightClick'
   | 'contextmenu'
+  | 'toolsReady'
   | 'relationModeStart'
   | 'relationModeEnd';
 // | 'relationCreated'

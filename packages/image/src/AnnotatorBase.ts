@@ -47,6 +47,10 @@ export class AnnotatorBase {
 
   protected cursorManager: CursorManager | null = null;
 
+  protected _toolsInitialized = false;
+
+  private _pendingToolData: Map<ToolName, AnnotationToolData<any>> = new Map();
+
   /**
    * 用于外部模块通信
    *
@@ -82,7 +86,8 @@ export class AnnotatorBase {
       this.cursorManager?.disable();
     }
 
-    this._initialTools();
+    // this._initialTools();
+    this._prepareInitialTools();
   }
 
   private _initialContainer() {
@@ -115,24 +120,55 @@ export class AnnotatorBase {
     eventEmitter.on(EInternalEvent.Render, this.render);
   }
 
+  private _prepareInitialTools() {
+    const { image } = this.config;
+
+    if (image?.url) {
+      // 先加载初始图片，让 axis 拿到正确的初始偏移与缩放
+      this.loadImage(image.url, {
+        rotate: image.rotate,
+      })
+        .catch((error) => {
+          console.error('[AnnotatorBase] Failed to load initial image', error);
+        })
+        .finally(() => {
+          this._setupTools();
+        });
+    } else {
+      this._setupTools();
+    }
+  }
+
+  private _setupTools() {
+    if (this._toolsInitialized) {
+      return;
+    }
+
+    this._initialTools();
+    this._toolsInitialized = true;
+    this._flushPendingToolData();
+    this.render();
+    this.emit('toolsReady');
+  }
+
   private _initialTools() {
     const { config } = this;
 
-    if (config.strokeWidth) {
+    if (config?.strokeWidth) {
       Annotation.strokeWidth = config.strokeWidth;
     }
 
-    if (config.strokeOpacity) {
+    if (config?.strokeOpacity) {
       Annotation.strokeOpacity = config.strokeOpacity;
     }
 
-    if (config.fillOpacity) {
+    if (config?.fillOpacity) {
       Annotation.fillOpacity = config.fillOpacity;
     }
 
     TOOL_NAMES.forEach((toolName) => {
-      if (config[toolName]) {
-        const ToolClass = ToolMapping[toolName];
+      if (config?.[toolName]) {
+        const ToolClass = ToolMapping?.[toolName];
         this.use(
           ToolClass.create({
             ...(config[toolName] as any),
@@ -143,6 +179,33 @@ export class AnnotatorBase {
         );
       }
     });
+  }
+
+  private _flushPendingToolData() {
+    if (this._pendingToolData.size === 0) {
+      return;
+    }
+
+    // 等图片和工具都准备好后再执行 `loadData`
+    for (const [toolName, data] of this._pendingToolData.entries()) {
+      if (!data) {
+        continue;
+      }
+
+      this._loadDataInternal(toolName, data as AnnotationToolData<any>);
+    }
+
+    this._pendingToolData.clear();
+  }
+
+  private _enqueueToolData(toolName: ToolName, data: AnnotationToolData<any>) {
+    const existing = this._pendingToolData.get(toolName) ?? [];
+    const normalized: any[] = Array.isArray(existing) ? existing.slice() : [];
+    const incoming = (Array.isArray(data) ? data.slice() : [data]) as any[];
+    const merged = normalized.concat(incoming);
+
+    // 工具未初始化时，暂存数据，防止坐标转换使用到错误的偏移
+    this._pendingToolData.set(toolName, merged as AnnotationToolData<any>);
   }
 
   public use(instance: AnnotationTool) {
@@ -221,6 +284,15 @@ export class AnnotatorBase {
       return;
     }
 
+    if (!this._toolsInitialized) {
+      this._enqueueToolData(toolName, data as AnnotationToolData<any>);
+      return;
+    }
+
+    this._loadDataInternal(toolName, data as AnnotationToolData<any>);
+  }
+
+  private _loadDataInternal(toolName: ToolName, data: AnnotationToolData<any>) {
     const { config, tools } = this;
     const tool = tools.get(toolName);
 
@@ -269,6 +341,8 @@ export class AnnotatorBase {
     this.backgroundRenderer = null;
     this.config = null as any;
     rbush.clear();
+    this._toolsInitialized = false;
+    this._pendingToolData.clear();
   }
 
   public on = eventEmitter.on.bind(eventEmitter);

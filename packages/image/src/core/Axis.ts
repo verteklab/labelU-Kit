@@ -41,6 +41,17 @@ export class Axis {
    */
   private _startPanPoint: AxisPoint | null = null;
 
+  /**
+   * 定义轴的“安全区”边界框（bounding box）。
+   *
+   * 安全区用于限制允许的最小和最大 X、Y 坐标。
+   * 默认情况下，安全区为无限大，即没有任何限制。
+   *
+   * @remarks
+   * - `minX` 和 `minY` 表示 X、Y 坐标的下界。
+   * - `maxX` 和 `maxY` 表示 X、Y 坐标的上界。
+   * - 可以通过设置这些值，将轴的活动范围限制在指定区域内。
+   */
   private _safeZone: BBox = {
     minX: -Infinity,
     minY: -Infinity,
@@ -53,14 +64,18 @@ export class Axis {
    */
   private _startMovePoint: AxisPoint | null = null;
 
+  /** 画布在 x 方向上的移动距离 */
   private _distanceX: number = 0;
 
+  /** 画布在 y 方向上的移动距离 */
   private _distanceY: number = 0;
 
-  // private _cursor: CrossCursor | null = null;
+  // private _cursor: CrossCursor | null = null; // 光标对象（暂未启用）
 
+  /** 渲染器实例 */
   private _renderer: Renderer | null = null;
 
+  /** 定时器，用于触发画布重绘 */
   private _ticker: Ticker | null = null;
 
   /**
@@ -71,25 +86,47 @@ export class Axis {
     y: 0,
   };
 
+  /**
+   * 初始背景图片的偏移量
+   * @description
+   * 用于记录图片在画布中的初始偏移（左上角坐标），用于坐标转换
+   */
   private _initialBackgroundOffset: AxisPoint = {
     x: 0,
     y: 0,
   };
 
+  /**
+   * 初始背景图片的缩放比例
+   * @description
+   * 用于记录图片在画布中的初始缩放比例，用于坐标转换
+   */
   private _initialBackgroundScale: number = 1;
 
+  /**
+   * 设置初始背景图片的缩放比例
+   */
   public set initialBackgroundScale(scale: number) {
     this._initialBackgroundScale = scale;
   }
 
+  /**
+   * 获取初始背景图片的缩放比例
+   */
   public get initialBackgroundScale() {
     return this._initialBackgroundScale;
   }
 
+  /**
+   * 设置初始背景图片的偏移量
+   */
   public set initialBackgroundOffset(offset: AxisPoint) {
     this._initialBackgroundOffset = offset;
   }
 
+  /**
+   * 获取初始背景图片的偏移量
+   */
   public get initialBackgroundOffset() {
     return this._initialBackgroundOffset;
   }
