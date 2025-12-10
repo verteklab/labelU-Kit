@@ -431,25 +431,42 @@ export class DraftPolygon extends Draft<PolygonData, PolygonStyle | PointStyle |
 
     let x = coordinate[0].x;
     let y = coordinate[0].y;
+    // 是否开启吸附功能
+    if (config.edgeAdsorptive) {
+      if (config.vertexAdsorptive) {
+        // 吸附顶点功能
+        const nearestVertex = rbush.scanPolygonsAndSetNearestVertex(
+          { x: e.offsetX, y: e.offsetY },
+          config.adsorptiveDistance ?? 10, // 吸附距离
+          [this.group.id],
+        );
+        if (nearestVertex) {
+          x = nearestVertex.x;
+          y = nearestVertex.y;
+          coordinate[0].x = x;
+          coordinate[0].y = y;
+        }
+      } else {
+        // 吸附线功能
+        const latestPoint =
+          config.edgeAdsorptive &&
+          rbush.scanPolygonsAndSetNearestPoint(
+            {
+              x: e.offsetX,
+              y: e.offsetY,
+            },
+            config.adsorptiveDistance ?? 10,
+            [this.group.id],
+          );
 
-    const latestPoint =
-      config.edgeAdsorptive &&
-      rbush.scanPolygonsAndSetNearestPoint(
-        {
-          x: e.offsetX,
-          y: e.offsetY,
-        },
-        10,
-        [this.group.id],
-      );
-
-    if (latestPoint) {
-      x = latestPoint.x;
-      y = latestPoint.y;
-      coordinate[0].x = x;
-      coordinate[0].y = y;
+        if (latestPoint) {
+          x = latestPoint.x;
+          y = latestPoint.y;
+          coordinate[0].x = x;
+          coordinate[0].y = y;
+        }
+      }
     }
-
     this.group.shapes[0].coordinate[_pointIndex].x = x;
     this.group.shapes[0].coordinate[_pointIndex].y = y;
 
