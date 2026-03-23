@@ -279,8 +279,10 @@ export function AttributeAction({ annotation, annotations, showEdit = true }: At
       {visible && <VisibilityIcon onClick={toggleBatchVisibility(false)} />}
       {!visible && <StyledVisibilityOffIcon onClick={toggleBatchVisibility(true)} />}
       <DeleteIcon
-        onClick={() => {
-          if (disabled || requestEditable()) {
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          if (disabled || !requestEditable()) {
             return;
           }
 
