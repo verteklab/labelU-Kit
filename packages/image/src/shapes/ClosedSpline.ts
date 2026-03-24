@@ -22,6 +22,8 @@ export class ClosedSpline extends Shape<PolygonStyle> {
     arrowType: 'none',
     headLength: 10,
     headAngle: 30,
+    endpointRadius: 0,
+    endpointFill: '',
   };
 
   private _controlPoints: AxisPoint[];

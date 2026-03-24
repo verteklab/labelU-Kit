@@ -166,6 +166,15 @@ export class AnnotatorBase {
       Annotation.fillOpacity = config.fillOpacity;
     }
 
+    // 线段端点（与 Annotator.endpointRadius / endpointFill 使用同一套静态默认值）
+    if (config?.endpointRadius !== undefined) {
+      Annotation.endpointRadius = config.endpointRadius;
+    }
+
+    if (config?.endpointFill !== undefined) {
+      Annotation.endpointFill = config.endpointFill;
+    }
+
     TOOL_NAMES.forEach((toolName) => {
       if (config?.[toolName]) {
         const ToolClass = ToolMapping?.[toolName];

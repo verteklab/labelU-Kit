@@ -6,6 +6,7 @@ import type { LineStyle } from '../shapes/Line.shape';
 import { AnnotationLine, type LineData } from '../annotations';
 import { Spline } from '../shapes';
 import type { AnnotationParams } from '../annotations/Annotation';
+import { Annotation } from '../annotations/Annotation';
 import type { ControllerPoint } from './ControllerPoint';
 import { Draft } from './Draft';
 import type { LineToolOptions } from '../tools';
@@ -54,6 +55,9 @@ export class DraftLineCurve extends Draft<LineData, LineStyle> {
         style: {
           ...style,
           stroke: strokeColor,
+          strokeWidth: Annotation.strokeWidth,
+          endpointRadius: Annotation.endpointRadius,
+          endpointFill: Annotation.endpointFill,
         },
       });
 

@@ -71,6 +71,20 @@ export interface AnnotatorOptions {
    */
   strokeOpacity?: number;
 
+  /**
+   * 线段端点圆半径（为 0 时不绘制端点）
+   *
+   * @default 5
+   */
+  endpointRadius?: number;
+
+  /**
+   * 线段端点填充色；空字符串表示与描边同色
+   *
+   * @default ''
+   */
+  endpointFill?: string;
+
   requestEdit?: (
     type: EditType,
     payload: {
@@ -120,6 +134,12 @@ export default class AnnotatorConfig {
 
   public strokeOpacity?: number;
 
+  /** 线段端点圆半径；见 {@link AnnotatorOptions.endpointRadius} */
+  public endpointRadius?: number;
+
+  /** 线段端点填充色；见 {@link AnnotatorOptions.endpointFill} */
+  public endpointFill?: string;
+
   public requestEdit?: (
     type: EditType,
     payload: {
@@ -145,6 +165,8 @@ export default class AnnotatorConfig {
     this.strokeWidth = options.strokeWidth;
     this.fillOpacity = options.fillOpacity;
     this.strokeOpacity = options.strokeOpacity;
+    this.endpointRadius = options.endpointRadius;
+    this.endpointFill = options.endpointFill;
     this.requestEdit = options.requestEdit;
   }
 }

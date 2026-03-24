@@ -64,6 +64,12 @@ export class Annotation<Data extends BasicImageAnnotation, Style> {
 
   static strokeWidth = 2;
 
+  /** 线段端点圆半径（与 Line 默认一致）；为 0 时不绘制端点 */
+  static endpointRadius = 4;
+
+  /** 端点填充色；空字符串表示与描边同色 */
+  static endpointFill = '';
+
   static minOffsetDistance = 14;
 
   static rotationThreshold = 90;

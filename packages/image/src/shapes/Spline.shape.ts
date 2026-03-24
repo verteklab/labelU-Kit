@@ -20,6 +20,8 @@ export class Spline extends Shape<LineStyle> {
     arrowType: 'none',
     headLength: 10,
     headAngle: 30,
+    endpointRadius: 0,
+    endpointFill: '',
   };
 
   private _controlPoints: [AxisPoint, AxisPoint];

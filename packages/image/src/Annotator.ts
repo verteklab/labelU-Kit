@@ -5,8 +5,9 @@ import { EInternalEvent } from './enums';
 import { axis } from './singletons/axis';
 import { eventEmitter, rbush } from './singletons';
 import { Annotation, AnnotationMapping } from './annotations';
-import { Line, ShapeText } from './shapes';
+import { Group, Line, Shape, ShapeText } from './shapes';
 import type { Cursor } from './shapes';
+import type { AxisPoint } from './shapes/Point.shape';
 import { AnnotatorBase } from './AnnotatorBase';
 import type { AnnotatorOptions } from './core/AnnotatorConfig';
 import type { CursorType } from './core/CursorManager';
@@ -476,6 +477,123 @@ export class Annotator extends AnnotatorBase {
     });
 
     this.render();
+  }
+
+  /**
+   * 获取端点圆半径
+   */
+  // TODO: 挪到Annotation里
+  public get endpointRadius(): number {
+    return Annotation.endpointRadius;
+  }
+  /**
+   * 设置端点圆半径
+   * @param value 端点圆半径
+   */
+  public set endpointRadius(value: number) {
+    Annotation.endpointRadius = value;
+    this._applyEndpointLineStyleGlobally();
+  }
+
+  /**
+   * 获取端点填充色
+   */
+  public get endpointFill(): string {
+    return Annotation.endpointFill;
+  }
+  /**
+   * 设置端点填充色
+   * @param value 端点填充色
+   *
+   */
+  public set endpointFill(value: string) {
+    Annotation.endpointFill = value;
+    this._applyEndpointLineStyleGlobally();
+  }
+
+  /**
+   * 同步 endpoint 到 tool / annotation / draft 的 style 元数据，并更新画布上所有相关 shape（含绘制中的 sketch），
+   * 避免仅改了 shape.style 而 draft.style、annotation.style 仍陈旧导致交互时不同步。
+   */
+  private _applyEndpointLineStyleGlobally() {
+    const endpointRadius = Annotation.endpointRadius;
+    const endpointFill = Annotation.endpointFill;
+    const patch = { endpointRadius, endpointFill };
+
+    const { tools } = this;
+
+    tools.forEach((tool) => {
+      const t = tool as { style: object };
+      t.style = { ...t.style, ...patch };
+
+      tool.drawing?.forEach((annotation) => {
+        const a = annotation as { style: object };
+        a.style = { ...a.style, ...patch };
+
+        annotation.group.each((shape) => {
+          if (!(shape instanceof ShapeText)) {
+            shape.updateStyle(patch);
+          }
+        });
+      });
+
+      if (tool.draft) {
+        const d = tool.draft as { style: object };
+        d.style = { ...d.style, ...patch };
+
+        tool.draft.group.each((shape) => {
+          if (!(shape instanceof ShapeText)) {
+            shape.updateStyle(patch);
+          }
+        });
+      }
+
+      const { sketch } = tool;
+      if (sketch) {
+        if (sketch instanceof Group) {
+          sketch.each((shape) => {
+            if (!(shape instanceof ShapeText)) {
+              shape.updateStyle(patch);
+            }
+          });
+        } else if (sketch instanceof Shape) {
+          sketch.updateStyle(patch as never);
+        }
+      }
+    });
+
+    this.render();
+  }
+
+  /**
+   * 将相对于 canvas 的像素坐标（如 `MouseEvent.offsetX` / `offsetY`）转为「原始图片」坐标系下的点（以图片左上角为原点）。
+   *
+   * @remarks 内部等价于 `axis.getOriginalCoord`（抵消画布平移/缩放）后再
+   * `axis.convertCanvasCoordinate`（抵消图片在画布中的初始偏移与适配缩放），
+   * 与导出标注数据所用坐标系一致。
+   *
+   * 若 `x` 或 `y` 任一不在 `[0, naturalWidth]` / `[0, naturalHeight]` 内，
+   * 则整点返回 `{ x: 0, y: 0 }`。
+   */
+  public canvasToImageCoordinate(canvasPoint: AxisPoint): AxisPoint {
+    if (!axis) {
+      throw new Error('Axis is not initialized');
+    }
+
+    const raw = axis.convertCanvasCoordinate(axis.getOriginalCoord(canvasPoint));
+    const img = this.backgroundRenderer?.image;
+    if (!img) {
+      return raw;
+    }
+
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    if (w <= 0 || h <= 0) {
+      return raw;
+    }
+
+    const inside = raw.x >= 0 && raw.x <= w && raw.y >= 0 && raw.y <= h;
+    return inside ? raw : { x: 0, y: 0 };
   }
 
   public getFlatData() {

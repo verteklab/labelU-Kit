@@ -103,7 +103,13 @@ export class AnnotationLine extends Annotation<LineData, LineStyle> {
         const line = new Line({
           id: data.points[i - 1].id,
           coordinate: [startPoint, endPoint],
-          style: { ...commonStyle, stroke: strokeColor, strokeWidth: Annotation.strokeWidth },
+          style: {
+            ...commonStyle,
+            stroke: strokeColor,
+            strokeWidth: Annotation.strokeWidth,
+            endpointRadius: Annotation.endpointRadius,
+            endpointFill: Annotation.endpointFill,
+          },
         });
 
         group.add(line);
@@ -121,7 +127,13 @@ export class AnnotationLine extends Annotation<LineData, LineStyle> {
           id: data.points[i - 1].id,
           coordinate: [startPoint, endPoint],
           controlPoints: [{ ...startControl }, { ...endControl }],
-          style: { ...commonStyle, stroke: strokeColor, strokeWidth: Annotation.strokeWidth },
+          style: {
+            ...commonStyle,
+            stroke: strokeColor,
+            strokeWidth: Annotation.strokeWidth,
+            endpointRadius: Annotation.endpointRadius,
+            endpointFill: Annotation.endpointFill,
+          },
         });
 
         group.add(curve);
@@ -183,11 +195,18 @@ export class AnnotationLine extends Annotation<LineData, LineStyle> {
     } else {
       group.each((shape) => {
         if (!(shape instanceof ShapeText)) {
-          shape.updateStyle({
+          const st = shape.style as Partial<LineStyle>;
+          const patch: Record<string, unknown> = {
             ...commonStyle,
             stroke: strokeColor,
             strokeWidth: Annotation.strokeWidth + 2,
-          });
+          };
+          // 保留画布上最新端点样式（annotator 改 endpoint 时只更新了 shape.style，未改 annotation.style）
+          if (typeof st.endpointRadius === 'number') {
+            patch.endpointRadius = st.endpointRadius;
+            patch.endpointFill = st.endpointFill;
+          }
+          shape.updateStyle(patch as LineStyle);
         }
       });
     }
@@ -205,11 +224,17 @@ export class AnnotationLine extends Annotation<LineData, LineStyle> {
 
     group.each((shape) => {
       if (!(shape instanceof ShapeText)) {
-        shape.updateStyle({
+        const st = shape.style as Partial<LineStyle>;
+        const patch: Record<string, unknown> = {
           ...commonStyle,
           stroke: strokeColor,
           strokeWidth: Annotation.strokeWidth,
-        });
+        };
+        if (typeof st.endpointRadius === 'number') {
+          patch.endpointRadius = st.endpointRadius;
+          patch.endpointFill = st.endpointFill;
+        }
+        shape.updateStyle(patch as LineStyle);
       }
     });
   };
