@@ -365,5 +365,7 @@
   "single": "单向箭头",
   "double": "双向箭头",
   "none": "无箭头",
-  "relationToolTooltip": "关联关系工具只能与矩形或多边形工具一起使用"
+  "relationToolTooltip": "关联关系工具只能与矩形或多边形工具一起使用",
+  "endpointRadius": "端点半径",
+  "endpointFill": "端点填充色"
 }
