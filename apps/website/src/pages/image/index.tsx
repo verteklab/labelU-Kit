@@ -629,6 +629,10 @@ const defaultConfig = {
     maxPointAmount: 100,
     edgeAdsorptive: false,
     labels: [{ color: '#ff0000', key: '车道线', value: 'lane' }],
+    style: {
+      endpointRadius: 5,
+      endpointFill: '',
+    },
   },
   rect: { minWidth: 1, minHeight: 1, labels: [{ color: '#00ff1e', key: '头盔', value: 'helmet' }] },
   polygon: {
