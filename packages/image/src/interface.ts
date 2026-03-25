@@ -81,6 +81,12 @@ export type ToolOptions =
 
 export type { LineData };
 
+/** 线段样式（含 `endpointRadius`、`endpointFill` 等），用于 `line.style` / `relation.style` 等 */
+export type { LineStyle } from './shapes/Line.shape';
+
+/** 二维点（画布 / 图片坐标等共用） */
+export type { AxisPoint } from './shapes/Point.shape';
+
 export type AnnotationData = LineData | PointData | RectData | PolygonData | CuboidData | RelationData;
 
 export type AllTypeAnnotationDataGroup = CuboidData[] &

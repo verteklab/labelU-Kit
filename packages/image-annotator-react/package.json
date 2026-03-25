@@ -1,6 +1,6 @@
 {
   "name": "@labelu/image-annotator-react",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "image annotator for react",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -19,7 +19,7 @@
     "access": "public"
   },
   "author": {
-    "name": "gary-shen",
+    "name": "TimeoutY",
     "email": "shenguanlin@pjlab.org.cn"
   },
   "keywords": [
@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "@labelu/components-react": "1.8.0",
-    "@labelu/image": "1.5.0",
+    "@labelu/image": "workspace:*",
     "@labelu/interface": "1.3.1",
     "@labelu/i18n": "1.1.0",
     "lodash.clonedeep": "^4.5.0",

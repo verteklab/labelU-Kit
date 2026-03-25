@@ -9,6 +9,7 @@ import { AnnotationLine, AnnotationPolygon } from '../annotations';
 import type { PolygonStyle, AxisPoint } from '../shapes';
 import { Spline, ClosedSpline } from '../shapes';
 import type { AnnotationParams } from '../annotations/Annotation';
+import { Annotation } from '../annotations/Annotation';
 import type { ControllerPoint } from './ControllerPoint';
 import { Draft } from './Draft';
 import type { PolygonToolOptions } from '../tools';
@@ -70,6 +71,9 @@ export class DraftPolygonCurve extends Draft<PolygonData, LineStyle> {
         style: {
           ...style,
           stroke: strokeColor,
+          strokeWidth: Annotation.strokeWidth,
+          endpointRadius: Annotation.endpointRadius,
+          endpointFill: Annotation.endpointFill,
         },
       });
 

@@ -1,3 +1,7 @@
+/**
+ * 折线（多段线）标注的编辑草稿：`group` 内先追加各段 `Line`，再追加顶点 `ControllerPoint`（后渲染者在上层）。
+ * 交互：拖拽顶点；Alt + 悬停线段可预览并插入新顶点；Alt + 点击顶点可删除；边吸附时由 rbush 吸附到邻近点。
+ */
 import cloneDeep from 'lodash.clonedeep';
 
 import uid from '@/utils/uid';
@@ -20,10 +24,13 @@ import { Tool } from '../tools/Tool';
 export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
   public config: LineToolOptions;
 
+  /** 选中态下包住整条折线的白色描边矩形（不含控制点参与 bbox 计算） */
   private _selectionShape: Rect | null = null;
 
+  /** 拖拽某一顶点时，与之相连的一条或两条 Line（[起点所在线, 终点所在线]，端点只有一侧有线） */
   private _effectedLines: [Line | undefined, Line | undefined] | null = null;
 
+  /** Alt+悬停线段时临时插入、待点击确认的预览控制点 */
   private _pointToBeAdded: ControllerPoint | null = null;
 
   constructor(config: LineToolOptions, params: AnnotationParams<LineData, LineStyle>) {
@@ -42,6 +49,7 @@ export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
 
   /**
    * 设置图形
+   * 按 data.points 重建：相邻点连成 Line，每个点对应一个 ControllerPoint。
    */
   private _setupShapes() {
     const { data, group, style, config, strokeColor } = this;
@@ -57,6 +65,8 @@ export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
           ...style,
           stroke: strokeColor,
           strokeWidth: Annotation.strokeWidth,
+          endpointRadius: Annotation.endpointRadius,
+          endpointFill: Annotation.endpointFill,
         },
       });
 
@@ -149,11 +159,17 @@ export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
   private _onLineOut = (_e: MouseEvent, line: Line) => {
     const { style, strokeColor } = this;
 
-    line.updateStyle({ ...style, stroke: strokeColor, strokeWidth: Annotation.strokeWidth });
+    line.updateStyle({
+      ...style,
+      stroke: strokeColor,
+      strokeWidth: Annotation.strokeWidth,
+      endpointRadius: Annotation.endpointRadius,
+      endpointFill: Annotation.endpointFill,
+    });
   };
 
   /**
-   * 移动草稿
+   * 拖拽整个草稿平移时先去掉选取框，避免残影；松手后在 _onMouseUp 里重建。
    */
   private _onMouseMove = () => {
     this._destroySelection();
@@ -299,6 +315,7 @@ export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
 
   /**
    * 创建选取框
+   * 根据折线几何包围盒创建白色描边矩形（静态展示选中范围）。
    */
   private _createSelection() {
     if (this._selectionShape) {
@@ -322,6 +339,7 @@ export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
     });
   }
 
+  /** 拖拽或移动控制点过程中隐藏选取框，减少闪烁 */
   private _destroySelection() {
     if (this._selectionShape) {
       this._selectionShape.destroy();
@@ -333,6 +351,9 @@ export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
     return this.group.shapes.map((shape) => cloneDeep(shape.dynamicCoordinate));
   }
 
+  /**
+   * group.shapes 前半为 Line、后半为 ControllerPoint；从下标 `points.length - 1` 起依次对应各顶点原始坐标。
+   */
   public syncCoordToData() {
     const { group, data } = this;
     const pointSize = data.points.length;
@@ -349,6 +370,7 @@ export class DraftLine extends Draft<LineData, LineStyle | PointStyle> {
     eventEmitter.off(EInternalEvent.KeyUp, this._onKeyUp);
   }
 
+  /** 先画 group（线 + 控制点），再叠画选取矩形 */
   public render(ctx: CanvasRenderingContext2D) {
     super.render(ctx);
 

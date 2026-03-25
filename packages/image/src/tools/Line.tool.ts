@@ -17,6 +17,9 @@ import { DraftLine, DraftLineCurve } from '../drafts';
 import { Spline } from '../shapes/Spline.shape';
 import { ToolWrapper } from './Tool.decorator';
 
+/**
+ * Line 工具配置。`style` / `hoveredStyle` 使用 {@link LineStyle}，可设置 `endpointRadius`、`endpointFill` 等端点样式。
+ */
 export interface LineToolOptions extends BasicToolParams<LineData, LineStyle> {
   /**
    * 线条类型

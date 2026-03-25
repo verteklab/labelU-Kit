@@ -367,5 +367,7 @@
   "single": "Single",
   "double": "Double",
   "none": "None",
-  "relationToolTooltip": "The relation tool can only be used with rectangle or polygon tools"
+  "relationToolTooltip": "The relation tool can only be used with rectangle or polygon tools",
+  "endpointRadius": "Endpoint radius",
+  "endpointFill": "Endpoint fill"
 }

@@ -19,6 +19,10 @@ export interface LineStyle {
   headLength?: number;
   /** 箭头头部角度（弧度） */
   headAngle?: number;
+  /** 线段两端端点圆半径，为 0 时不绘制端点 */
+  endpointRadius?: number;
+  /** 端点填充色；空字符串表示与 `stroke` 同色 */
+  endpointFill?: string;
 }
 
 export type LineCoordinate = [
@@ -58,6 +62,14 @@ export class Line extends Shape<LineStyle> {
     arrowType: 'none',
     headLength: 15,
     headAngle: Math.PI / 6, // 30度
+    /**
+     * 线段两端端点圆半径，为 0 时不绘制端点
+     */
+    endpointRadius: 5,
+    /**
+     * 端点填充色；空字符串表示与 `stroke` 同色
+     */
+    endpointFill: '',
   };
 
   public style: Required<LineStyle> = Line.DEFAULT_STYLE;
@@ -153,7 +165,7 @@ export class Line extends Shape<LineStyle> {
     }
 
     const { style, dynamicCoordinate } = this;
-    const { stroke, strokeWidth, opacity, arrowType, lineStyle, dashPattern } = style;
+    const { stroke, strokeWidth, opacity, arrowType, lineStyle, dashPattern, endpointRadius, endpointFill } = style;
     const [start, end] = dynamicCoordinate;
 
     ctx.save();
@@ -178,6 +190,20 @@ export class Line extends Shape<LineStyle> {
     ctx.moveTo(start.x, start.y);
     ctx.lineTo(end.x, end.y);
     ctx.stroke();
+
+    // 端点圆点（大小与颜色可由 style.endpointRadius / endpointFill 配置）
+    if (endpointRadius > 0) {
+      const dotFill = endpointFill ? endpointFill : stroke;
+      ctx.fillStyle = dotFill;
+      ctx.beginPath();
+      ctx.arc(start.x, start.y, endpointRadius, 0, 2 * Math.PI, false);
+      ctx.fill();
+      ctx.closePath();
+      ctx.beginPath();
+      ctx.arc(end.x, end.y, endpointRadius, 0, 2 * Math.PI, false);
+      ctx.fill();
+      ctx.closePath();
+    }
 
     // 如果启用箭头，绘制箭头头部
     if (arrowType === 'single') {
