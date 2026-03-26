@@ -139,6 +139,19 @@ export class Tool<Data extends BasicImageAnnotation, Style, Config extends Basic
     }
   }
 
+  /**
+   * 撤销绘制顶点后，用 Monitor 记录的画布坐标同步橡皮筋（与一次 mousemove 等价）。
+   */
+  protected syncSketchPreviewFromLastCursor() {
+    if (!this.sketch || !monitor) {
+      return;
+    }
+
+    const { offsetX, offsetY } = monitor.lastCanvasMouse;
+
+    this.handleMouseMove({ offsetX, offsetY } as MouseEvent);
+  }
+
   public rebuildDraft(_data: Data) {
     // do nothing
     console.warn('rebuildDraft is not implemented!');
@@ -399,12 +412,8 @@ export class Tool<Data extends BasicImageAnnotation, Style, Config extends Basic
     return Array.from(drawing.values()).map((annotation) => annotation.data);
   }
 
-  public render(ctx: CanvasRenderingContext2D) {
-    if (this.sketch) {
-      Promise.resolve().then(() => {
-        this.sketch?.render(ctx);
-      });
-    }
+  public render(_ctx: CanvasRenderingContext2D) {
+    // sketch 在 AnnotatorBase.render 末尾与草稿之后统一同步绘制，保证与清屏、标注同帧
   }
 
   public destroy(): void;

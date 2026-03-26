@@ -286,6 +286,49 @@ export class PolygonTool extends Tool<PolygonData, PolygonStyle, PolygonToolOpti
     axis?.rerender();
   };
 
+  /**
+   * 绘制多边形过程中撤销上一次点击追加的顶点（仅直线模式；曲线模式返回 false）。
+   */
+  public undoLastSketchPoint(): boolean {
+    if (!this.requestEdit('create')) {
+      return false;
+    }
+
+    const { sketch, config } = this;
+
+    if (!sketch || config.lineType !== 'line') {
+      return false;
+    }
+
+    const { shapes } = sketch;
+
+    // 仅有填充多边形 + 第一条边：再撤销则结束本次绘制
+    if (shapes.length <= 2) {
+      this.destroySketch();
+      axis?.rerender();
+      return true;
+    }
+
+    const polygon = shapes[0] as Polygon;
+    const lastLine = shapes[shapes.length - 1];
+
+    sketch.remove(lastLine);
+
+    const coords = polygon.plainCoordinate.slice(0, -1);
+
+    if (coords.length < 2) {
+      this.destroySketch();
+      axis?.rerender();
+      return true;
+    }
+
+    polygon.coordinate = coords;
+    sketch.update();
+    this.syncSketchPreviewFromLastCursor();
+    axis?.rerender();
+    return true;
+  }
+
   protected handleDelete = () => {
     const { sketch, draft } = this;
 

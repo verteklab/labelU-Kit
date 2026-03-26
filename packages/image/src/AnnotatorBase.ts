@@ -79,6 +79,7 @@ export class AnnotatorBase {
     this._initialAxis();
     this.monitor = createMonitor(this.renderer!.canvas, {
       getTools: () => this.tools,
+      tryUndoLastSketchPoint: () => this.tryUndoLastSketchPoint(),
     });
     this.cursorManager = createCursorManager(this.container, { x: 0, y: 0 });
 
@@ -271,7 +272,38 @@ export class AnnotatorBase {
 
     // 草稿在最上层
     draft?.render(renderer!.ctx!);
+
+    // 绘制中的 sketch 必须在同一帧同步绘制（避免微任务晚一帧导致撤销/键盘更新后画面陈旧）
+    tools.forEach((tool) => {
+      if (tool.sketch) {
+        tool.sketch.render(renderer!.ctx!);
+      }
+    });
   };
+
+  /**
+   * 在折线/多边形「直线」绘制过程中撤销上一次点击追加的顶点。
+   * 返回 true 表示已处理，UI 不应再执行全局撤销（如 Ctrl+Z）。
+   */
+  public tryUndoLastSketchPoint(): boolean {
+    if (!this.config.editable) {
+      return false;
+    }
+
+    const { activeToolName, tools } = this;
+
+    if (!activeToolName) {
+      return false;
+    }
+
+    const tool = tools.get(activeToolName) as { undoLastSketchPoint?: () => boolean };
+
+    if (typeof tool?.undoLastSketchPoint !== 'function') {
+      return false;
+    }
+
+    return tool.undoLastSketchPoint() === true;
+  }
 
   public loadImage(url: string, options?: Omit<ImageOption, 'container' | 'width' | 'height' | 'url' | 'zIndex'>) {
     const { config } = this;

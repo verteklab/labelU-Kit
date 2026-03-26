@@ -471,6 +471,37 @@ export class LineTool extends Tool<LineData, LineStyle, LineToolOptions> {
     axis?.rerender();
   };
 
+  /**
+   * 绘制折线过程中撤销上一次点击追加的顶点（仅直线模式；曲线模式返回 false）。
+   */
+  public undoLastSketchPoint(): boolean {
+    if (!this.requestEdit('create')) {
+      return false;
+    }
+
+    const { sketch, config } = this;
+
+    if (!sketch || config.lineType !== 'line') {
+      return false;
+    }
+
+    const { shapes } = sketch;
+
+    if (shapes.length <= 1) {
+      this.destroySketch();
+      axis?.rerender();
+      return true;
+    }
+
+    const lastLine = shapes[shapes.length - 1] as Line;
+
+    sketch.remove(lastLine);
+    sketch.update();
+    this.syncSketchPreviewFromLastCursor();
+    axis?.rerender();
+    return true;
+  }
+
   protected handleDelete = () => {
     const { sketch, draft } = this;
 
