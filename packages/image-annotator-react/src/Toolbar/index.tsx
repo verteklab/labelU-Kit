@@ -14,7 +14,6 @@ import { ReactComponent as RelationIcon } from '@/assets/tools/relation.svg';
 import { useTool } from '@/context/tool.context';
 import { useAnnotationCtx } from '@/context/annotation.context';
 import { useHistoryCtx } from '@/context/history.context';
-import { dragModalRef } from '@/LabelSection';
 
 import ToolStyle from './ToolStyle';
 import hotkeysConst from './hotkeys.const';
@@ -69,12 +68,12 @@ export function AnnotatorToolbar({ right }: IToolbarInEditorProps) {
   );
 
   const handleUndo = useCallback(() => {
-    if (dragModalRef.current?.getVisibility()) {
+    if (engine.tryUndoLastSketchPoint()) {
       return;
     }
 
     undo();
-  }, [undo]);
+  }, [engine, undo]);
 
   const handleToolChange = (tool: ToolName) => () => {
     engine.switch(tool, memorizeToolLabel.current?.[tool]?.value);

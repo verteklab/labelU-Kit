@@ -20,6 +20,11 @@ type EventKeyName = keyof typeof keyEventMapping;
 
 export interface MonitorOption {
   getTools: () => Map<ToolName, AnnotationTool>;
+
+  /**
+   * 绘制中撤销上一顶点（Ctrl+Z），返回 true 表示已处理，应阻止其它快捷键（如全局撤销）
+   */
+  tryUndoLastSketchPoint?: () => boolean;
 }
 
 /**
@@ -42,6 +47,12 @@ export class Monitor {
   private _orderIndexedAnnotationIds: string[] = [];
 
   private _enabled: boolean = false;
+
+  /**
+   * 画布上最近一次鼠标位置（与 MouseEvent.offsetX/offsetY 一致）。
+   * 用于键盘撤销后同步橡皮筋，避免依赖可能被平移逻辑改写的 cursor 坐标。
+   */
+  public lastCanvasMouse = { offsetX: 0, offsetY: 0 };
 
   /** 键盘按键记录 */
   private _keyStatus: Record<EventKeyName, boolean> = {
@@ -79,6 +90,8 @@ export class Monitor {
     _canvas.addEventListener('wheel', this._handleWheel, false);
     document.addEventListener('keydown', this._handleKeyDown, false);
     document.addEventListener('keyup', this._handleKeyUp, false);
+    /** 捕获阶段优先处理绘制中 Ctrl+Z，避免与 React 全局撤销顺序错乱 */
+    document.addEventListener('keydown', this._handleUndoKeyCapture, true);
 
     eventEmitter.on(EInternalEvent.RightMouseUpWithoutAxisChange, this._handleRightMouseUp);
     eventEmitter.on('delete', this._updateOrderIndexedAnnotationIds);
@@ -87,6 +100,31 @@ export class Monitor {
 
   private _handleContextMenu = (e: MouseEvent) => {
     e.preventDefault();
+  };
+
+  private _handleUndoKeyCapture = (e: KeyboardEvent) => {
+    if (!config?.editable) {
+      return;
+    }
+
+    const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+    if (tag && ['input', 'textarea', 'select'].includes(tag)) {
+      return;
+    }
+
+    if (!(e.ctrlKey || e.metaKey) || e.shiftKey) {
+      return;
+    }
+
+    if (e.key !== 'z' && e.key !== 'Z') {
+      return;
+    }
+
+    const tryUndo = this._options.tryUndoLastSketchPoint;
+    if (tryUndo && tryUndo()) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
   };
 
   private _handleKeyDown = (e: KeyboardEvent) => {
@@ -194,6 +232,8 @@ export class Monitor {
     if (!this._enabled) {
       return;
     }
+
+    this.lastCanvasMouse = { offsetX: e.offsetX, offsetY: e.offsetY };
 
     e.preventDefault();
 
@@ -410,6 +450,7 @@ export class Monitor {
     _canvas.removeEventListener('wheel', this._handleWheel);
     document.removeEventListener('keydown', this._handleKeyDown);
     document.removeEventListener('keyup', this._handleKeyUp);
+    document.removeEventListener('keydown', this._handleUndoKeyCapture, true);
 
     eventEmitter.off(EInternalEvent.RightMouseUpWithoutAxisChange, this._handleRightMouseUp);
     eventEmitter.off('delete', this._updateOrderIndexedAnnotationIds);
