@@ -223,6 +223,66 @@ export class Draft<Data extends BasicImageAnnotation, Style extends Record<strin
     return (this._serializeData?.shapes?.map(loop) as AxisPoint[] | AxisPoint[][]) ?? [];
   }
 
+  /**
+   * 收集序列化快照中所有动态坐标点（用于整体平移时的边界钳制）
+   */
+  private _collectSerializedDynamicPoints(node: any): AxisPoint[] {
+    if (!node) {
+      return [];
+    }
+
+    if (Array.isArray(node.shapes)) {
+      let acc: AxisPoint[] = [];
+
+      for (let i = 0; i < node.shapes.length; i++) {
+        acc = acc.concat(this._collectSerializedDynamicPoints(node.shapes[i]));
+      }
+
+      return acc;
+    }
+
+    const points: AxisPoint[] = [];
+
+    if (node.dynamicCoordinate) {
+      points.push(...node.dynamicCoordinate);
+    }
+
+    if (node.dynamicControlPoints) {
+      points.push(...node.dynamicControlPoints);
+    }
+
+    return points;
+  }
+
+  /**
+   * 将整体平移增量钳制到安全区内，使所有点可同时贴边（避免 isCoordinatesSafe 整轴丢弃移动）
+   */
+  private _clampTranslationDelta(dx: number, dy: number, dynamicPoints: AxisPoint[]) {
+    if (!axis || dynamicPoints.length === 0) {
+      return { dx, dy };
+    }
+
+    const { minX, maxX, minY, maxY } = axis.safeZone;
+    let dxMin = -Infinity;
+    let dxMax = Infinity;
+    let dyMin = -Infinity;
+    let dyMax = Infinity;
+
+    for (let i = 0; i < dynamicPoints.length; i++) {
+      const p = dynamicPoints[i];
+
+      dxMin = Math.max(dxMin, minX - p.x);
+      dxMax = Math.min(dxMax, maxX - p.x);
+      dyMin = Math.max(dyMin, minY - p.y);
+      dyMax = Math.min(dyMax, maxY - p.y);
+    }
+
+    const clampedDx = dxMin > dxMax ? 0 : Math.min(Math.max(dx, dxMin), dxMax);
+    const clampedDy = dyMin > dyMax ? 0 : Math.min(Math.max(dy, dyMin), dyMax);
+
+    return { dx: clampedDx, dy: clampedDy };
+  }
+
   public finishSetup() {
     this.emit('setup');
   }
@@ -295,7 +355,16 @@ export class Draft<Data extends BasicImageAnnotation, Style extends Record<strin
   public moveByDistance() {
     const { config, _serializeData } = this;
 
-    const [safeX, safeY] = config?.outOfImage ? [true, true] : axis!.isCoordinatesSafe(this._digCoordinates());
+    let distX = axis!.distance.x;
+    let distY = axis!.distance.y;
+
+    if (!config?.outOfImage && _serializeData) {
+      const dynamicPoints = this._collectSerializedDynamicPoints(_serializeData);
+      const clamped = this._clampTranslationDelta(distX, distY, dynamicPoints);
+
+      distX = clamped.dx;
+      distY = clamped.dy;
+    }
 
     // TODO: 消灭any
     const loop = (shape: AllShape, index: number, serialized: any) => {
@@ -305,28 +374,14 @@ export class Draft<Data extends BasicImageAnnotation, Style extends Record<strin
         });
       } else {
         shape.plainCoordinate.forEach((point, i) => {
-          if (safeX) {
-            shape.coordinate[i].x = axis!.getOriginalX(serialized[index].dynamicCoordinate[i].x + axis!.distance.x);
-          }
-
-          if (safeY) {
-            shape.coordinate[i].y = axis!.getOriginalY(serialized[index].dynamicCoordinate[i].y + axis!.distance.y);
-          }
+          shape.coordinate[i].x = axis!.getOriginalX(serialized[index].dynamicCoordinate[i].x + distX);
+          shape.coordinate[i].y = axis!.getOriginalY(serialized[index].dynamicCoordinate[i].y + distY);
         });
 
         if (shape instanceof Spline || shape instanceof ClosedSpline) {
           shape.plainControlPoints.forEach((point, i) => {
-            if (safeX) {
-              shape.controlPoints[i].x = axis!.getOriginalX(
-                serialized[index].dynamicControlPoints[i].x + axis!.distance.x,
-              );
-            }
-
-            if (safeY) {
-              shape.controlPoints[i].y = axis!.getOriginalY(
-                serialized[index].dynamicControlPoints[i].y + axis!.distance.y,
-              );
-            }
+            shape.controlPoints[i].x = axis!.getOriginalX(serialized[index].dynamicControlPoints[i].x + distX);
+            shape.controlPoints[i].y = axis!.getOriginalY(serialized[index].dynamicControlPoints[i].y + distY);
           });
         }
       }

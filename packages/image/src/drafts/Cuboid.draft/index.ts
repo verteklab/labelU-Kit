@@ -370,6 +370,17 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
     axis?.rerender();
   }
 
+  /** 将透视规则计算得到的后面 X 坐标钳制到图片范围内 */
+  private _getSafeBackX(plainBackX: number) {
+    if (this.config.outOfImage) {
+      return plainBackX;
+    }
+
+    const scaledSafeX = axis!.getSafeX(axis!.getScaledX(plainBackX));
+
+    return axis!.getOriginalX(scaledSafeX);
+  }
+
   private _correctData() {
     const { data } = this;
 
@@ -805,6 +816,14 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           safeY = controllerPoint.coordinate[0].y < controlBackBl.plainCoordinate[0].y;
         }
 
+        // 由透视规则更新后方右侧图形
+        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
+        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
+        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
+        const sizeRatio = width / height;
+
+        const backX = this._getSafeBackX(controllerPoint.plainCoordinate[0].x + currentBackHeight * sizeRatio);
+
         if (safeX) {
           controlBackBl.coordinate[0].x = x;
           lineTl.coordinate[1].x = x;
@@ -813,6 +832,15 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackLeft.coordinate[0].x = x;
           edgeBackLeft.coordinate[1].x = x;
           edgeBackBottom.coordinate[1].x = x;
+
+          controlBackTr.coordinate[0].x = backX;
+          controlBackBr.coordinate[0].x = backX;
+          lineTr.coordinate[1].x = backX;
+          lineBr.coordinate[1].x = backX;
+          edgeBackTop.coordinate[1].x = backX;
+          edgeBackRight.coordinate[0].x = backX;
+          edgeBackRight.coordinate[1].x = backX;
+          edgeBackBottom.coordinate[0].x = backX;
         }
 
         if (safeY) {
@@ -824,23 +852,6 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackLeft.coordinate[1].y = y;
           edgeBackRight.coordinate[0].y = y;
         }
-
-        // 由透视规则更新后方左侧图形
-        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
-        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
-        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
-        const sizeRatio = width / height;
-
-        const backX = controllerPoint.plainCoordinate[0].x + currentBackHeight * sizeRatio;
-
-        controlBackTr.coordinate[0].x = backX;
-        controlBackBr.coordinate[0].x = backX;
-        lineTr.coordinate[1].x = backX;
-        lineBr.coordinate[1].x = backX;
-        edgeBackTop.coordinate[1].x = backX;
-        edgeBackRight.coordinate[0].x = backX;
-        edgeBackRight.coordinate[1].x = backX;
-        edgeBackBottom.coordinate[0].x = backX;
 
         const minFrontY = axis!.getOriginalY(_prevControllerDynamicCoordinates!.get('front-tl')!.y);
 
@@ -877,6 +888,14 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           safeY = controllerPoint.coordinate[0].y < controlBackBr.plainCoordinate[0].y;
         }
 
+        // 由透视规则更新后方左侧图形
+        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
+        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
+        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
+        const sizeRatio = width / height;
+
+        const backX = this._getSafeBackX(controllerPoint.plainCoordinate[0].x - currentBackHeight * sizeRatio);
+
         if (safeX) {
           controlBackTl.coordinate[0].x = x;
           controlBackBr.coordinate[0].x = x;
@@ -886,6 +905,15 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackRight.coordinate[0].x = x;
           edgeBackRight.coordinate[1].x = x;
           edgeBackBottom.coordinate[0].x = x;
+
+          controlBackTl.coordinate[0].x = backX;
+          controlBackBl.coordinate[0].x = backX;
+          lineTl.coordinate[1].x = backX;
+          lineBl.coordinate[1].x = backX;
+          edgeBackTop.coordinate[0].x = backX;
+          edgeBackLeft.coordinate[0].x = backX;
+          edgeBackLeft.coordinate[1].x = backX;
+          edgeBackBottom.coordinate[1].x = backX;
         }
 
         if (safeY) {
@@ -898,23 +926,6 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackLeft.coordinate[1].y = y;
           edgeBackRight.coordinate[0].y = y;
         }
-
-        // 由透视规则更新后方左侧图形
-        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
-        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
-        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
-        const sizeRatio = width / height;
-
-        const backX = controllerPoint.plainCoordinate[0].x - currentBackHeight * sizeRatio;
-
-        controlBackTl.coordinate[0].x = backX;
-        controlBackBl.coordinate[0].x = backX;
-        lineTl.coordinate[1].x = backX;
-        lineBl.coordinate[1].x = backX;
-        edgeBackTop.coordinate[0].x = backX;
-        edgeBackLeft.coordinate[0].x = backX;
-        edgeBackLeft.coordinate[1].x = backX;
-        edgeBackBottom.coordinate[1].x = backX;
 
         const minFrontY = axis!.getOriginalY(_prevControllerDynamicCoordinates!.get('front-tl')!.y);
 
@@ -953,6 +964,14 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
             controllerPoint.coordinate[0].y < controlFrontBl.plainCoordinate[0].y;
         }
 
+        // 由透视规则更新后方右侧图形
+        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
+        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
+        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
+        const sizeRatio = width / height;
+
+        const backX = this._getSafeBackX(controllerPoint.plainCoordinate[0].x + currentBackHeight * sizeRatio);
+
         if (safeX) {
           controlBackTl.coordinate[0].x = x;
           lineTl.coordinate[1].x = x;
@@ -961,6 +980,15 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackLeft.coordinate[0].x = x;
           edgeBackLeft.coordinate[1].x = x;
           edgeBackBottom.coordinate[1].x = x;
+
+          controlBackTr.coordinate[0].x = backX;
+          controlBackBr.coordinate[0].x = backX;
+          lineTr.coordinate[1].x = backX;
+          lineBr.coordinate[1].x = backX;
+          edgeBackTop.coordinate[1].x = backX;
+          edgeBackRight.coordinate[0].x = backX;
+          edgeBackRight.coordinate[1].x = backX;
+          edgeBackBottom.coordinate[0].x = backX;
         }
 
         if (safeY) {
@@ -972,23 +1000,6 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackLeft.coordinate[0].y = y;
           edgeBackRight.coordinate[1].y = y;
         }
-
-        // 由透视规则更新后方左侧图形
-        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
-        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
-        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
-        const sizeRatio = width / height;
-
-        const backX = controllerPoint.plainCoordinate[0].x + currentBackHeight * sizeRatio;
-
-        controlBackTr.coordinate[0].x = backX;
-        controlBackBr.coordinate[0].x = backX;
-        lineTr.coordinate[1].x = backX;
-        lineBr.coordinate[1].x = backX;
-        edgeBackTop.coordinate[1].x = backX;
-        edgeBackRight.coordinate[0].x = backX;
-        edgeBackRight.coordinate[1].x = backX;
-        edgeBackBottom.coordinate[0].x = backX;
 
         const minFrontY = axis!.getOriginalY(_prevControllerDynamicCoordinates!.get('front-tl')!.y);
 
@@ -1027,6 +1038,14 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
             controllerPoint.coordinate[0].y < controlFrontBr.plainCoordinate[0].y;
         }
 
+        // 由透视规则更新后方左侧图形
+        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
+        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
+        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
+        const sizeRatio = width / height;
+
+        const backX = this._getSafeBackX(controllerPoint.plainCoordinate[0].x - currentBackHeight * sizeRatio);
+
         if (safeX) {
           controlBackTr.coordinate[0].x = x;
           lineTr.coordinate[1].x = x;
@@ -1035,6 +1054,15 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackRight.coordinate[0].x = x;
           edgeBackRight.coordinate[1].x = x;
           edgeBackBottom.coordinate[0].x = x;
+
+          controlBackTl.coordinate[0].x = backX;
+          controlBackBl.coordinate[0].x = backX;
+          lineTl.coordinate[1].x = backX;
+          lineBl.coordinate[1].x = backX;
+          edgeBackTop.coordinate[0].x = backX;
+          edgeBackLeft.coordinate[0].x = backX;
+          edgeBackLeft.coordinate[1].x = backX;
+          edgeBackBottom.coordinate[1].x = backX;
         }
 
         if (safeY) {
@@ -1046,23 +1074,6 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackLeft.coordinate[0].y = y;
           edgeBackRight.coordinate[1].y = y;
         }
-
-        // 由透视规则更新后方左侧图形
-        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
-        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
-        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
-        const sizeRatio = width / height;
-
-        const backX = controllerPoint.plainCoordinate[0].x - currentBackHeight * sizeRatio;
-
-        controlBackTl.coordinate[0].x = backX;
-        controlBackBl.coordinate[0].x = backX;
-        lineTl.coordinate[1].x = backX;
-        lineBl.coordinate[1].x = backX;
-        edgeBackTop.coordinate[0].x = backX;
-        edgeBackLeft.coordinate[0].x = backX;
-        edgeBackLeft.coordinate[1].x = backX;
-        edgeBackBottom.coordinate[1].x = backX;
 
         const minFrontY = axis!.getOriginalY(_prevControllerDynamicCoordinates!.get('front-tl')!.y);
 
@@ -1169,11 +1180,16 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
     const lineBr = _connectedLineMapping.get('br')!;
     const lineBl = _connectedLineMapping.get('bl')!;
 
-    const x = axis!.getOriginalX(edge.previousDynamicCoordinate![0].x + axis!.distance.x);
-    const y = axis!.getOriginalY(edge.previousDynamicCoordinate![0].y + axis!.distance.y);
+    const dynamicX = edge.previousDynamicCoordinate![0].x + axis!.distance.x;
+    const dynamicY = edge.previousDynamicCoordinate![0].y + axis!.distance.y;
+    const safeDynamicX = config.outOfImage ? dynamicX : axis!.getSafeX(dynamicX);
+    const safeDynamicY = config.outOfImage ? dynamicY : axis!.getSafeY(dynamicY);
+    const x = axis!.getOriginalX(safeDynamicX);
+    const y = axis!.getOriginalY(safeDynamicY);
 
-    // eslint-disable-next-line prefer-const
-    let [safeX, safeY] = config.outOfImage ? [true, true] : axis!.isCoordinatesSafe(edge.previousDynamicCoordinate!);
+    // 边控制器统一采用 clamp 到边界，避免快速拖动时停在边界内侧
+    const safeX = true;
+    let safeY = true;
 
     const [zPosition, position] = edge.name!.split('-') as [ZPosition, SimpleEdgePosition];
 
@@ -1390,6 +1406,14 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
       }
     } else {
       if (position === 'right') {
+        // 由透视规则更新后方左侧图形
+        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
+        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
+        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
+        const sizeRatio = width / height;
+
+        const backX = this._getSafeBackX(edge.plainCoordinate[1].x - currentBackHeight * sizeRatio);
+
         if (safeX) {
           controlBackTr.coordinate[0].x = x;
           controlBackTl.coordinate[0].x = x;
@@ -1400,27 +1424,27 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackRight.coordinate[0].x = x;
           edgeBackRight.coordinate[1].x = x;
           edgeBackBottom.coordinate[0].x = x;
-        }
 
+          controlBackTl.coordinate[0].x = backX;
+          controlBackBl.coordinate[0].x = backX;
+          lineTl.coordinate[1].x = backX;
+          lineBl.coordinate[1].x = backX;
+          edgeBackTop.coordinate[0].x = backX;
+          edgeBackLeft.coordinate[0].x = backX;
+          edgeBackLeft.coordinate[1].x = backX;
+          edgeBackBottom.coordinate[1].x = backX;
+        }
+      }
+
+      if (position === 'left') {
         // 由透视规则更新后方左侧图形
         const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
         const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
         const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
         const sizeRatio = width / height;
 
-        const backX = edge.plainCoordinate[1].x - currentBackHeight * sizeRatio;
+        const backX = this._getSafeBackX(edge.plainCoordinate[1].x + currentBackHeight * sizeRatio);
 
-        controlBackTl.coordinate[0].x = backX;
-        controlBackBl.coordinate[0].x = backX;
-        lineTl.coordinate[1].x = backX;
-        lineBl.coordinate[1].x = backX;
-        edgeBackTop.coordinate[0].x = backX;
-        edgeBackLeft.coordinate[0].x = backX;
-        edgeBackLeft.coordinate[1].x = backX;
-        edgeBackBottom.coordinate[1].x = backX;
-      }
-
-      if (position === 'left') {
         if (safeX) {
           controlBackTl.coordinate[0].x = x;
           controlBackBl.coordinate[0].x = x;
@@ -1430,24 +1454,16 @@ export class DraftCuboid extends Draft<CuboidData, PolygonStyle | PointStyle> {
           edgeBackLeft.coordinate[0].x = x;
           edgeBackLeft.coordinate[1].x = x;
           edgeBackBottom.coordinate[1].x = x;
+
+          controlBackTr.coordinate[0].x = backX;
+          controlBackBr.coordinate[0].x = backX;
+          lineTr.coordinate[1].x = backX;
+          lineBr.coordinate[1].x = backX;
+          edgeBackTop.coordinate[1].x = backX;
+          edgeBackRight.coordinate[0].x = backX;
+          edgeBackRight.coordinate[1].x = backX;
+          edgeBackBottom.coordinate[0].x = backX;
         }
-
-        // 由透视规则更新后方左侧图形
-        const width = Math.abs(controlFrontTr.dynamicCoordinate[0].x - controlFrontTl.dynamicCoordinate[0].x);
-        const height = Math.abs(controlFrontBr.dynamicCoordinate[0].y - controlFrontTr.dynamicCoordinate[0].y);
-        const currentBackHeight = Math.abs(edgeBackRight.plainCoordinate[0].y - edgeBackRight.plainCoordinate[1].y);
-        const sizeRatio = width / height;
-
-        const backX = edge.plainCoordinate[1].x + currentBackHeight * sizeRatio;
-
-        controlBackTr.coordinate[0].x = backX;
-        controlBackBr.coordinate[0].x = backX;
-        lineTr.coordinate[1].x = backX;
-        lineBr.coordinate[1].x = backX;
-        edgeBackTop.coordinate[1].x = backX;
-        edgeBackRight.coordinate[0].x = backX;
-        edgeBackRight.coordinate[1].x = backX;
-        edgeBackBottom.coordinate[0].x = backX;
       }
     }
 

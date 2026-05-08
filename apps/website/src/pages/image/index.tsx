@@ -643,6 +643,7 @@ const defaultConfig = {
     labels: [{ color: '#8400ff', key: '热气球', value: 'balloon' }],
   },
   cuboid: {
+    outOfImage: false,
     labels: [{ color: '#ff6d2e', key: '汽车', value: 'car' }],
   },
 };
