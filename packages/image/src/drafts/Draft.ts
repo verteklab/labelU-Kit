@@ -368,20 +368,33 @@ export class Draft<Data extends BasicImageAnnotation, Style extends Record<strin
 
     // TODO: 消灭any
     const loop = (shape: AllShape, index: number, serialized: any) => {
+      const snapshot = serialized?.[index];
+      if (!snapshot) {
+        return;
+      }
+
       if (shape instanceof Group) {
         (shape as Group).each((item, idx) => {
-          loop(item, idx, serialized[index].shapes);
+          loop(item, idx, snapshot.shapes);
         });
       } else {
         shape.plainCoordinate.forEach((point, i) => {
-          shape.coordinate[i].x = axis!.getOriginalX(serialized[index].dynamicCoordinate[i].x + distX);
-          shape.coordinate[i].y = axis!.getOriginalY(serialized[index].dynamicCoordinate[i].y + distY);
+          const dynamicPoint = snapshot.dynamicCoordinate?.[i];
+          if (!dynamicPoint || !shape.coordinate[i]) {
+            return;
+          }
+          shape.coordinate[i].x = axis!.getOriginalX(dynamicPoint.x + distX);
+          shape.coordinate[i].y = axis!.getOriginalY(dynamicPoint.y + distY);
         });
 
         if (shape instanceof Spline || shape instanceof ClosedSpline) {
           shape.plainControlPoints.forEach((point, i) => {
-            shape.controlPoints[i].x = axis!.getOriginalX(serialized[index].dynamicControlPoints[i].x + distX);
-            shape.controlPoints[i].y = axis!.getOriginalY(serialized[index].dynamicControlPoints[i].y + distY);
+            const dynamicPoint = snapshot.dynamicControlPoints?.[i];
+            if (!dynamicPoint || !shape.controlPoints[i]) {
+              return;
+            }
+            shape.controlPoints[i].x = axis!.getOriginalX(dynamicPoint.x + distX);
+            shape.controlPoints[i].y = axis!.getOriginalY(dynamicPoint.y + distY);
           });
         }
       }
